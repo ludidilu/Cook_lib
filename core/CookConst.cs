@@ -13,5 +13,9 @@
         public const int REQUIRE_NUM_MIN = 2;
 
         public const int REQUIRE_NUM_MAX = 4;
+
+        public const int WORKER_NUM = 1;
+
+        public const double REQUIRE_OPTIMIZE_PROBABILITY = 0.3;
     }
 }

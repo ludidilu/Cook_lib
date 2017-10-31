@@ -51,9 +51,9 @@ namespace Cook_lib
 
         private List<DishData> oDish = new List<DishData>();
 
-        private int mWorkPos = -1;
+        private int[] mWorkPos = new int[CookConst.WORKER_NUM];
 
-        private int oWorkPos = -1;
+        private int[] oWorkPos = new int[CookConst.WORKER_NUM];
 
         private List<DishResult> mResult = new List<DishResult>();
 
@@ -67,6 +67,12 @@ namespace Cook_lib
 
         public void Start(IList<int> _mDish, IList<int> _oDish)
         {
+            for (int i = 0; i < CookConst.WORKER_NUM; i++)
+            {
+                mWorkPos[i] = -1;
+                oWorkPos[i] = -1;
+            }
+
             for (int i = 0; i < _mDish.Count; i++)
             {
                 DishData data = new DishData();
@@ -100,7 +106,7 @@ namespace Cook_lib
             }
         }
 
-        public void Update()
+        internal void Update()
         {
             tick++;
 
@@ -196,7 +202,7 @@ namespace Cook_lib
                     list.RemoveAt(index);
                 }
 
-                bool isOptimize = random.NextDouble() < 0.5;
+                bool isOptimize = random.NextDouble() < CookConst.REQUIRE_OPTIMIZE_PROBABILITY;
 
                 DishResult result = new DishResult();
 
@@ -228,7 +234,7 @@ namespace Cook_lib
             }
         }
 
-        private void RefreshDish(int _cookIndex, List<DishData> _dish)
+        private void RefreshDish(int[] _workerPos, List<DishData> _dish)
         {
             for (int i = 0; i < _dish.Count; i++)
             {
@@ -248,7 +254,7 @@ namespace Cook_lib
                     }
                 }
 
-                if (_cookIndex == i)
+                if (Array.IndexOf(_workerPos, i) != -1)
                 {
                     switch (data.state)
                     {
@@ -367,27 +373,43 @@ namespace Cook_lib
             return requirementUid;
         }
 
+        private void Reset()
+        {
+            mDish.Clear();
+            oDish.Clear();
+            mResult.Clear();
+            oResult.Clear();
+            require.Clear();
+            dishAll.Clear();
+
+            tick = 0;
+        }
 
 
 
 
 
 
-
-        private void GetCommandChangeWorkPos(bool _isMine, int _pos)
+        private void GetCommandChangeWorkPos(bool _isMine, int _workerIndex, int _pos)
         {
             if (_isMine)
             {
-                if (_pos > -2 && _pos < mDish.Count)
+                if (_pos > -2 && _pos < mDish.Count && _workerIndex > -1 && _workerIndex < CookConst.WORKER_NUM)
                 {
-                    mWorkPos = _pos;
+                    if (Array.IndexOf(mWorkPos, _pos) == -1)
+                    {
+                        mWorkPos[_workerIndex] = _pos;
+                    }
                 }
             }
             else
             {
-                if (_pos > -2 && _pos < oDish.Count)
+                if (_pos > -2 && _pos < oDish.Count && _workerIndex > -1 && _workerIndex < CookConst.WORKER_NUM)
                 {
-                    oWorkPos = _pos;
+                    if (Array.IndexOf(oWorkPos, _pos) == -1)
+                    {
+                        oWorkPos[_workerIndex] = _pos;
+                    }
                 }
             }
         }
