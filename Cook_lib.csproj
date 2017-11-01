@@ -56,6 +56,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="client\Cook_client.cs" />
     <Compile Include="core\command\CommandChangeResultPos.cs" />
     <Compile Include="core\command\CommandChangeWorkerPos.cs" />
     <Compile Include="core\command\CommandCompleteDish.cs" />

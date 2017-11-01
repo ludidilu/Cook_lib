@@ -12,6 +12,8 @@ namespace Cook_lib
 
         private Action<bool, bool, MemoryStream> serverSendDataCallBack;
 
+        private List<ICommand> commandList = new List<ICommand>();
+
         public void ServerSetCallBack(Action<bool, bool, MemoryStream> _serverSendDataCallBack)
         {
             serverSendDataCallBack = _serverSendDataCallBack;
@@ -44,8 +46,6 @@ namespace Cook_lib
 
         private void ServerGetCommand(bool _isMine, BinaryReader _br)
         {
-            serverSendDataCallBack(_isMine, false, new MemoryStream());
-
             ICommand command;
 
             CommandType commandType = (CommandType)_br.ReadByte();
@@ -56,19 +56,11 @@ namespace Cook_lib
 
                     command = new CommandChangeWorkerPos();
 
-                    command.FromBytes(_br);
-
-                    main.GetCommandChangeWorkerPos((CommandChangeWorkerPos)command);
-
                     break;
 
                 case CommandType.CHANGE_RESULT_POS:
 
                     command = new CommandChangeResultPos();
-
-                    command.FromBytes(_br);
-
-                    main.GetCommandChangeResultPos((CommandChangeResultPos)command);
 
                     break;
 
@@ -76,36 +68,18 @@ namespace Cook_lib
 
                     command = new CommandCompleteDish();
 
-                    command.FromBytes(_br);
-
-                    main.GetCommandCompleteDish((CommandCompleteDish)command);
-
                     break;
 
                 default:
 
                     command = new CommandCompleteRequirement();
 
-                    command.FromBytes(_br);
-
-                    main.GetCommandCompleteRequirement((CommandCompleteRequirement)command);
-
                     break;
             }
 
-            using (MemoryStream ms = new MemoryStream())
-            {
-                using (BinaryWriter bw = new BinaryWriter(ms))
-                {
-                    bw.Write(PackageTag.S2C_DOACTION);
+            command.FromBytes(_br);
 
-                    command.ToBytes(bw);
-
-                    serverSendDataCallBack(true, true, ms);
-
-                    serverSendDataCallBack(false, true, ms);
-                }
-            }
+            commandList.Add(command);
         }
 
         private void ServerRefreshData(bool _isMine)
@@ -118,23 +92,51 @@ namespace Cook_lib
 
         public void ServerUpdate()
         {
-            int randomSeed = random.Next();
-
-            main.Update(randomSeed);
-
             using (MemoryStream ms = new MemoryStream())
             {
                 using (BinaryWriter bw = new BinaryWriter(ms))
                 {
+                    int randomSeed = random.Next();
+
                     bw.Write(PackageTag.S2C_UPDATE);
 
                     bw.Write(main.tick);
 
                     bw.Write(randomSeed);
 
+                    bw.Write(commandList.Count);
+
+                    for (int i = 0; i < commandList.Count; i++)
+                    {
+                        ICommand command = commandList[i];
+
+                        command.ToBytes(bw);
+
+                        if (command is CommandChangeWorkerPos)
+                        {
+                            main.GetCommandChangeWorkerPos((CommandChangeWorkerPos)command);
+                        }
+                        else if (command is CommandChangeResultPos)
+                        {
+                            main.GetCommandChangeResultPos((CommandChangeResultPos)command);
+                        }
+                        else if (command is CommandCompleteDish)
+                        {
+                            main.GetCommandCompleteDish((CommandCompleteDish)command);
+                        }
+                        else
+                        {
+                            main.GetCommandCompleteRequirement((CommandCompleteRequirement)command);
+                        }
+                    }
+
+                    commandList.Clear();
+
                     serverSendDataCallBack(true, true, ms);
 
                     serverSendDataCallBack(false, true, ms);
+
+                    main.Update(randomSeed);
                 }
             }
         }
