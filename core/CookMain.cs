@@ -390,7 +390,14 @@ namespace Cook_lib
 
 
 
-        private void GetCommandChangeWorkPos(bool _isMine, int _workerIndex, int _pos)
+
+
+
+
+
+
+
+        internal void GetCommandChangeWorkPos(bool _isMine, int _workerIndex, int _pos)
         {
             if (_isMine)
             {
@@ -414,7 +421,7 @@ namespace Cook_lib
             }
         }
 
-        private void GetCommandChangeResultIndex(bool _isMine, int _index, int _targetIndex)
+        internal void GetCommandChangeResultIndex(bool _isMine, int _index, int _targetIndex)
         {
             if (_isMine)
             {
@@ -440,7 +447,7 @@ namespace Cook_lib
             }
         }
 
-        private void GetCommandCompleteDish(bool _isMine, int _index)
+        internal void GetCommandCompleteDish(bool _isMine, int _index)
         {
             if (_isMine)
             {
@@ -476,7 +483,7 @@ namespace Cook_lib
             }
         }
 
-        private void GetCommandCompleteRequirement(bool _isMine, List<int> _list, int _requirementUid)
+        internal void GetCommandCompleteRequirement(bool _isMine, List<int> _list, int _requirementUid)
         {
             for (int i = 0; i < require.Count; i++)
             {
@@ -509,9 +516,9 @@ namespace Cook_lib
 
                         require.RemoveAt(i);
 
-                        while (tmpList.Count > 0)
+                        for (int m = 0; m < tmpList.Count; m++)
                         {
-                            tmpList2.Remove(tmpList[0]);
+                            tmpList2.Remove(tmpList[m]);
                         }
                     }
 
@@ -527,6 +534,11 @@ namespace Cook_lib
 
         public bool CheckIsCompleteRequirement(List<DishResult> _result, DishRequirement _requirement)
         {
+            if (_result.Count != _requirement.dishArr.Length)
+            {
+                return false;
+            }
+
             List<DishResult> resultList = new List<DishResult>(_result);
 
             List<DishResult> requirementList = new List<DishResult>(_requirement.dishArr);
