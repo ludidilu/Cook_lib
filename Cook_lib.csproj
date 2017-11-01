@@ -56,8 +56,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="core\command\CommandChangeResultPos.cs" />
+    <Compile Include="core\command\CommandChangeWorkerPos.cs" />
+    <Compile Include="core\command\CommandCompleteDish.cs" />
+    <Compile Include="core\command\CommandCompleteRequirement.cs" />
+    <Compile Include="core\command\CommandConst.cs" />
     <Compile Include="core\CookConst.cs" />
     <Compile Include="core\CookMain.cs" />
+    <Compile Include="core\SuperRandom.cs" />
+    <Compile Include="packageTag\PackageTag.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="sds\IDishSDS.cs" />
     <Compile Include="server\Cook_server.cs" />

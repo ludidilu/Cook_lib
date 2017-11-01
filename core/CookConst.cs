@@ -16,6 +16,6 @@
 
         public const int WORKER_NUM = 1;
 
-        public const double REQUIRE_OPTIMIZE_PROBABILITY = 0.3;
+        public const float REQUIRE_OPTIMIZE_PROBABILITY = 0.3f;
     }
 }
