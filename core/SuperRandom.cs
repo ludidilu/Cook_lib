@@ -2,7 +2,7 @@
 {
     internal class SuperRandom
     {
-        private static readonly int MAX = 1 << 31;
+        public static readonly int MAX = 1 << 20;
 
         private const int A = 9;
         private const int B = 7;

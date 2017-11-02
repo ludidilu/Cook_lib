@@ -6,11 +6,13 @@ namespace Cook_lib
     {
         public bool isMine;
         public int pos;
+        public int targetPos;
 
-        public CommandCompleteDish(bool _isMine, int _pos)
+        public CommandCompleteDish(bool _isMine, int _pos, int _targetPos)
         {
             isMine = _isMine;
             pos = _pos;
+            targetPos = _targetPos;
         }
 
         public void ToBytes(BinaryWriter _bw)
@@ -18,6 +20,8 @@ namespace Cook_lib
             _bw.Write(isMine);
 
             _bw.Write(pos);
+
+            _bw.Write(targetPos);
         }
 
         public void FromBytes(BinaryReader _br)
@@ -25,6 +29,8 @@ namespace Cook_lib
             isMine = _br.ReadBoolean();
 
             pos = _br.ReadInt32();
+
+            targetPos = _br.ReadInt32();
         }
     }
 }
