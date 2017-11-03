@@ -46,13 +46,19 @@ namespace Cook_lib
             public int time;
         }
 
+        public class Worker
+        {
+            public int pos = -1;
+            public int punishTick = 0;
+        }
+
         private List<DishData> mDish = new List<DishData>();
 
         private List<DishData> oDish = new List<DishData>();
 
-        private int[] mWorkPos = new int[CookConst.WORKER_NUM];
+        private Worker[] mWorkers = new Worker[CookConst.WORKER_NUM];
 
-        private int[] oWorkPos = new int[CookConst.WORKER_NUM];
+        private Worker[] oWorkers = new Worker[CookConst.WORKER_NUM];
 
         private DishResult[] mResult = new DishResult[CookConst.RESULT_STATE.Length];
 
@@ -68,11 +74,7 @@ namespace Cook_lib
 
         public void Start(IList<int> _mDish, IList<int> _oDish)
         {
-            for (int i = 0; i < CookConst.WORKER_NUM; i++)
-            {
-                mWorkPos[i] = -1;
-                oWorkPos[i] = -1;
-            }
+            Reset();
 
             for (int i = 0; i < _mDish.Count; i++)
             {
@@ -134,9 +136,9 @@ namespace Cook_lib
 
             RefreshResult(oResult);
 
-            RefreshDish(mWorkPos, mDish);
+            RefreshDish(mWorkers, mDish);
 
-            RefreshDish(oWorkPos, oDish);
+            RefreshDish(oWorkers, oDish);
         }
 
         private void RefreshRequire()
@@ -254,7 +256,7 @@ namespace Cook_lib
             }
         }
 
-        private void RefreshDish(int[] _workerPos, List<DishData> _dish)
+        private void RefreshDish(Worker[] _workers, List<DishData> _dish)
         {
             for (int i = 0; i < _dish.Count; i++)
             {
@@ -274,7 +276,28 @@ namespace Cook_lib
                     }
                 }
 
-                if (Array.IndexOf(_workerPos, i) != -1)
+                bool hasWorker = false;
+
+                for (int m = 0; m < _workers.Length; m++)
+                {
+                    Worker worker = _workers[m];
+
+                    if (worker.pos == i)
+                    {
+                        if (worker.punishTick == 0)
+                        {
+                            hasWorker = true;
+                        }
+                        else
+                        {
+                            worker.punishTick--;
+                        }
+
+                        break;
+                    }
+                }
+
+                if (hasWorker)
                 {
                     switch (data.state)
                     {
@@ -408,6 +431,12 @@ namespace Cook_lib
             dishAll.Clear();
 
             tick = 0;
+
+            for (int i = 0; i < CookConst.WORKER_NUM; i++)
+            {
+                mWorkers[i] = new Worker();
+                oWorkers[i] = new Worker();
+            }
         }
 
 
@@ -426,22 +455,50 @@ namespace Cook_lib
         {
             if (_command.isMine)
             {
-                GetCommandChangeWorkerPosReal(_command, mWorkPos, mDish);
+                GetCommandChangeWorkerPosReal(_command, mWorkers, mDish);
             }
             else
             {
-                GetCommandChangeWorkerPosReal(_command, oWorkPos, oDish);
+                GetCommandChangeWorkerPosReal(_command, oWorkers, oDish);
             }
         }
 
-        private void GetCommandChangeWorkerPosReal(CommandChangeWorkerPos _command, int[] _workerPos, List<DishData> _dish)
+        private void GetCommandChangeWorkerPosReal(CommandChangeWorkerPos _command, Worker[] _workers, List<DishData> _dish)
         {
             if (_command.pos > -2 && _command.pos < _dish.Count && _command.workerIndex > -1 && _command.workerIndex < CookConst.WORKER_NUM)
             {
-                if (_command.pos == -1 || Array.IndexOf(_workerPos, _command.pos) == -1)
+                Worker worker = _workers[_command.workerIndex];
+
+                if (worker.pos == _command.pos)
                 {
-                    _workerPos[_command.workerIndex] = _command.pos;
+                    return;
                 }
+
+                if (_command.pos == -1)
+                {
+                    worker.pos = -1;
+
+                    worker.punishTick = 0;
+
+                    return;
+                }
+
+                for (int i = 0; i < _workers.Length; i++)
+                {
+                    if (i != _command.workerIndex)
+                    {
+                        Worker tmpWorker = _workers[i];
+
+                        if (tmpWorker.pos == _command.pos)
+                        {
+                            return;
+                        }
+                    }
+                }
+
+                worker.pos = _command.pos;
+
+                worker.punishTick = CookConst.WORKER_PUNISH_TICK;
             }
         }
 
@@ -678,8 +735,15 @@ namespace Cook_lib
 
             for (int i = 0; i < CookConst.WORKER_NUM; i++)
             {
-                bw.Write(mWorkPos[i]);
-                bw.Write(oWorkPos[i]);
+                Worker worker = mWorkers[i];
+
+                bw.Write(worker.pos);
+                bw.Write(worker.punishTick);
+
+                worker = oWorkers[i];
+
+                bw.Write(worker.pos);
+                bw.Write(worker.punishTick);
             }
 
             for (int i = 0; i < CookConst.RESULT_STATE.Length; i++)
@@ -747,8 +811,15 @@ namespace Cook_lib
 
             for (int i = 0; i < CookConst.WORKER_NUM; i++)
             {
-                mWorkPos[i] = _br.ReadInt32();
-                oWorkPos[i] = _br.ReadInt32();
+                Worker worker = mWorkers[i];
+
+                worker.pos = _br.ReadInt32();
+                worker.punishTick = _br.ReadInt32();
+
+                worker = oWorkers[i];
+
+                worker.pos = _br.ReadInt32();
+                worker.punishTick = _br.ReadInt32();
             }
 
             for (int i = 0; i < CookConst.RESULT_STATE.Length; i++)

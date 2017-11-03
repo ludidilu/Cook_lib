@@ -16,6 +16,8 @@
 
         public const int WORKER_NUM = 1;
 
+        public const int WORKER_PUNISH_TICK = 25;
+
         public const float REQUIRE_OPTIMIZE_PROBABILITY = 0.3f;
     }
 }
