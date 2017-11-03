@@ -3,11 +3,11 @@
     public interface IDishSDS
     {
         int GetID();
-        double GetPrepareTime();
-        double GetDecreaseValue();
-        double GetCookTime();
-        double GetExceedTime();
-        double GetOptimizeTime();
+        float GetPrepareTime();
+        float GetDecreaseValue();
+        float GetCookTime();
+        float GetExceedTime();
+        float GetOptimizeTime();
         bool GetIsUniversal();
         int GetMaxNum();
         int GetMoney();

@@ -6,7 +6,7 @@
 
         public static readonly bool[] RESULT_STATE = new bool[] { false, true, true, true, true };
 
-        public const double REQUIRE_EXCEED_TIME = 40;
+        public const float REQUIRE_EXCEED_TIME = 40;
 
         public const int REQUIRE_PRODUCE_TIME = 250;
 

@@ -5,8 +5,7 @@ using System.Text;
 
 namespace Cook_lib
 {
-    public class Cook_client
+    public struct EventWorkerChangePos
     {
-        private CookMain main = new CookMain();
     }
 }
