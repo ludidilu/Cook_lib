@@ -2,7 +2,7 @@
 
 namespace Cook_lib
 {
-    internal struct CommandChangeResultPos : ICommand
+    public struct CommandChangeResultPos : ICommand
     {
         public bool isMine;
         public int pos;

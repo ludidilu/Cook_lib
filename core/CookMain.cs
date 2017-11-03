@@ -76,6 +76,8 @@ namespace Cook_lib
 
         private SuperRandom random = new SuperRandom();
 
+        private Action<ValueType> eventCallBack;
+
         public CookMain()
         {
             for (int i = 0; i < CookConst.WORKER_NUM; i++)
@@ -83,6 +85,11 @@ namespace Cook_lib
                 mWorkers[i] = new Worker();
                 oWorkers[i] = new Worker();
             }
+        }
+
+        internal void SetEventCallBack(Action<ValueType> _eventCallBack)
+        {
+            eventCallBack = _eventCallBack;
         }
 
         public void Start(IList<int> _mDish, IList<int> _oDish)
@@ -145,13 +152,13 @@ namespace Cook_lib
 
             RefreshRequire();
 
-            RefreshResult(mResult);
+            RefreshResult(true);
 
-            RefreshResult(oResult);
+            RefreshResult(false);
 
-            RefreshDish(mWorkers, mDish);
+            RefreshDish(true);
 
-            RefreshDish(oWorkers, oDish);
+            RefreshDish(false);
         }
 
         private void RefreshRequire()
@@ -165,6 +172,8 @@ namespace Cook_lib
                 if (requirement.time > CookConst.REQUIRE_EXCEED_TIME * CookConst.TICK_NUM_PER_SECOND)
                 {
                     require.RemoveAt(i);
+
+                    eventCallBack?.Invoke(new EventRequirementDisappear(requirement.uid));
                 }
             }
 
@@ -173,6 +182,8 @@ namespace Cook_lib
                 DishRequirement requirement = GetRequire();
 
                 require.Add(requirement);
+
+                eventCallBack?.Invoke(new EventRequirementAppear(requirement.uid));
             }
         }
 
@@ -251,11 +262,13 @@ namespace Cook_lib
             return requirement;
         }
 
-        private void RefreshResult(DishResult[] _result)
+        private void RefreshResult(bool _isMine)
         {
-            for (int i = 0; i < _result.Length; i++)
+            DishResult[] results = _isMine ? mResult : oResult;
+
+            for (int i = 0; i < results.Length; i++)
             {
-                DishResult result = _result[i];
+                DishResult result = results[i];
 
                 if (result != null && CookConst.RESULT_STATE[i])
                 {
@@ -263,17 +276,33 @@ namespace Cook_lib
 
                     if (result.time > result.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
                     {
-                        _result[i] = null;
+                        results[i] = null;
+
+                        eventCallBack?.Invoke(new EventResultDisappear(_isMine, i));
                     }
                 }
             }
         }
 
-        private void RefreshDish(Worker[] _workers, List<DishData> _dish)
+        private void RefreshDish(bool _isMine)
         {
-            for (int i = 0; i < _dish.Count; i++)
+            Worker[] workers;
+            List<DishData> dish;
+
+            if (_isMine)
             {
-                DishData data = _dish[i];
+                workers = mWorkers;
+                dish = mDish;
+            }
+            else
+            {
+                workers = oWorkers;
+                dish = oDish;
+            }
+
+            for (int i = 0; i < dish.Count; i++)
+            {
+                DishData data = dish[i];
 
                 if (data.result != null)
                 {
@@ -286,14 +315,16 @@ namespace Cook_lib
                         data.result = null;
 
                         data.state = DishState.NULL;
+
+                        eventCallBack?.Invoke(new EventDishResultDisappear(_isMine, i));
                     }
                 }
 
                 bool hasWorker = false;
 
-                for (int m = 0; m < _workers.Length; m++)
+                for (int m = 0; m < workers.Length; m++)
                 {
-                    Worker worker = _workers[m];
+                    Worker worker = workers[m];
 
                     if (worker.pos == i)
                     {
@@ -333,6 +364,8 @@ namespace Cook_lib
                                     data.result = new DishResult();
 
                                     data.result.sds = data.sds;
+
+                                    eventCallBack?.Invoke(new EventDishResultAppear(_isMine, i));
                                 }
                             }
 
@@ -351,6 +384,8 @@ namespace Cook_lib
                                 data.result = new DishResult();
 
                                 data.result.sds = data.sds;
+
+                                eventCallBack?.Invoke(new EventDishResultAppear(_isMine, i));
                             }
 
                             break;
@@ -366,6 +401,8 @@ namespace Cook_lib
                                 data.state = DishState.NULL;
 
                                 data.result.isOptimized = true;
+
+                                eventCallBack?.Invoke(new EventDishResultBeOptimized(_isMine, i));
                             }
 
                             break;
@@ -412,6 +449,8 @@ namespace Cook_lib
                                 data.result = new DishResult();
 
                                 data.result.sds = data.sds;
+
+                                eventCallBack?.Invoke(new EventDishResultAppear(_isMine, i));
                             }
 
                             break;
@@ -502,6 +541,8 @@ namespace Cook_lib
 
                     worker.punishTick = 0;
 
+                    eventCallBack?.Invoke(_command);
+
                     return;
                 }
 
@@ -521,6 +562,8 @@ namespace Cook_lib
                 worker.pos = _command.pos;
 
                 worker.punishTick = CookConst.WORKER_PUNISH_TICK;
+
+                eventCallBack?.Invoke(_command);
             }
         }
 
@@ -547,6 +590,8 @@ namespace Cook_lib
                     if (_command.targetPos == -1)
                     {
                         _result[_command.pos] = null;
+
+                        eventCallBack?.Invoke(_command);
                     }
                     else
                     {
@@ -555,6 +600,8 @@ namespace Cook_lib
                             _result[_command.pos] = _result[_command.targetPos];
 
                             _result[_command.targetPos] = result;
+
+                            eventCallBack?.Invoke(_command);
                         }
                     }
                 }
@@ -586,6 +633,8 @@ namespace Cook_lib
                     dish.result = null;
 
                     dish.state = DishState.NULL;
+
+                    eventCallBack?.Invoke(_command);
                 }
             }
         }
@@ -612,6 +661,8 @@ namespace Cook_lib
 
                             resultArr[index] = null;
                         }
+
+                        eventCallBack?.Invoke(_command);
                     }
 
                     break;

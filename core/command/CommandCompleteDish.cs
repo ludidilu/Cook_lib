@@ -2,7 +2,7 @@
 
 namespace Cook_lib
 {
-    internal struct CommandCompleteDish : ICommand
+    public struct CommandCompleteDish : ICommand
     {
         public bool isMine;
         public int pos;

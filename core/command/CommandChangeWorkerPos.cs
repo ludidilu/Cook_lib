@@ -2,7 +2,7 @@
 
 namespace Cook_lib
 {
-    internal struct CommandChangeWorkerPos : ICommand
+    public struct CommandChangeWorkerPos : ICommand
     {
         public bool isMine;
         public int workerIndex;

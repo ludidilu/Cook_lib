@@ -8,5 +8,7 @@ namespace Cook_lib
     public class Cook_client
     {
         private CookMain main = new CookMain();
+
+        
     }
 }

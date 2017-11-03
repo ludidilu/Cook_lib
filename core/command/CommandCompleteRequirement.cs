@@ -3,7 +3,7 @@ using System.IO;
 
 namespace Cook_lib
 {
-    internal struct CommandCompleteRequirement : ICommand
+    public struct CommandCompleteRequirement : ICommand
     {
         public bool isMine;
         public List<int> resultList;
