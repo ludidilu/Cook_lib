@@ -4,27 +4,28 @@ using System.IO;
 
 namespace Cook_lib
 {
+    public interface IClient
+    {
+        void SendData(MemoryStream _ms);
+        void SendData(MemoryStream _ms, Action<BinaryReader> _callBack);
+        void RefreshData();
+        void Update();
+        void TriggerEvent(ValueType _event);
+    }
+
     public class Cook_client
     {
         private CookMain main = new CookMain();
 
-        private Action<MemoryStream> sendDataCallBack;
-
-        private Action<MemoryStream, Action<BinaryReader>> sendDataCallBackWithReply;
-
-        private Action refreshDataCallBack;
+        private IClient client;
 
         public bool clientIsMine { private set; get; }
 
-        public void SetCallBack(Action<MemoryStream> _sendDataCallBack, Action<MemoryStream, Action<BinaryReader>> _sendDataCallBackWithReply, Action _refreshDataCallBack, Action<ValueType> _eventCallBack)
+        public void Init(IClient _client)
         {
-            sendDataCallBack = _sendDataCallBack;
+            client = _client;
 
-            sendDataCallBackWithReply = _sendDataCallBackWithReply;
-
-            refreshDataCallBack = _refreshDataCallBack;
-
-            main.SetEventCallBack(_eventCallBack);
+            main.SetEventCallBack(client.TriggerEvent);
         }
 
         public void RefreshData()
@@ -35,7 +36,7 @@ namespace Cook_lib
                 {
                     bw.Write(PackageTag.C2S_REFRESH);
 
-                    sendDataCallBackWithReply(ms, GetRefreshData);
+                    client.SendData(ms, GetRefreshData);
                 }
             }
         }
@@ -46,7 +47,7 @@ namespace Cook_lib
 
             main.FromBytes(_br);
 
-            refreshDataCallBack();
+            client.RefreshData();
         }
 
         public void ClientGetPackage(BinaryReader _br)
@@ -66,6 +67,11 @@ namespace Cook_lib
         private void Update(BinaryReader _br)
         {
             int tick = _br.ReadInt32();
+
+            if (tick != main.tick)
+            {
+                throw new Exception("tick is not match!  client:" + main.tick + "   server:" + tick);
+            }
 
             int randomSeed = _br.ReadInt32();
 
@@ -120,6 +126,8 @@ namespace Cook_lib
             }
 
             main.Update(randomSeed);
+
+            client.Update();
         }
 
         public void ChangeResultPos(int _pos, int _targetPos)
@@ -160,7 +168,7 @@ namespace Cook_lib
 
                     _command.ToBytes(bw);
 
-                    sendDataCallBack(ms);
+                    client.SendData(ms);
                 }
             }
         }
