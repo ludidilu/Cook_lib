@@ -105,7 +105,7 @@ namespace Cook_lib
             {
                 using (BinaryWriter bw = new BinaryWriter(ms))
                 {
-                    int randomSeed = random.Next(SuperRandom.MAX);
+                    int randomSeed = random.Next();
 
                     bw.Write(PackageTag.S2C_UPDATE);
 
