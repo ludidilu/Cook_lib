@@ -79,14 +79,23 @@ namespace Cook_lib
 
             command.FromBytes(_br);
 
+            command.SetIsMine(_isMine);
+
             commandList.Add(command);
         }
 
         private void ServerRefreshData(bool _isMine)
         {
-            using (MemoryStream ms = main.ToBytes())
+            using (MemoryStream ms = new MemoryStream())
             {
-                serverSendDataCallBack(_isMine, false, ms);
+                using (BinaryWriter bw = new BinaryWriter(ms))
+                {
+                    bw.Write(_isMine);
+
+                    main.ToBytes(bw);
+
+                    serverSendDataCallBack(_isMine, false, ms);
+                }
             }
         }
 

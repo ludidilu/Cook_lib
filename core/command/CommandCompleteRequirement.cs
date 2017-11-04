@@ -16,8 +16,15 @@ namespace Cook_lib
             requirementUid = _requirementUid;
         }
 
+        public void SetIsMine(bool _isMine)
+        {
+            isMine = _isMine;
+        }
+
         public void ToBytes(BinaryWriter _bw)
         {
+            _bw.Write((byte)CommandType.COMPLETE_REQUIREMENT);
+
             _bw.Write(isMine);
 
             _bw.Write(resultList.Count);

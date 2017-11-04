@@ -804,37 +804,33 @@ namespace Cook_lib
 
 
 
-        internal MemoryStream ToBytes()
+        internal void ToBytes(BinaryWriter _bw)
         {
-            MemoryStream ms = new MemoryStream();
+            _bw.Write(tick);
 
-            BinaryWriter bw = new BinaryWriter(ms);
-
-            bw.Write(tick);
-
-            bw.Write(mDish.Count);
+            _bw.Write(mDish.Count);
 
             for (int i = 0; i < mDish.Count; i++)
             {
-                WriteDishData(mDish[i], bw);
+                WriteDishData(mDish[i], _bw);
             }
 
-            bw.Write(oDish.Count);
+            _bw.Write(oDish.Count);
 
             for (int i = 0; i < oDish.Count; i++)
             {
-                WriteDishData(oDish[i], bw);
+                WriteDishData(oDish[i], _bw);
             }
 
             for (int i = 0; i < CookConst.WORKER_NUM; i++)
             {
                 Worker worker = mWorkers[i];
 
-                WriteWorker(worker, bw);
+                WriteWorker(worker, _bw);
 
                 worker = oWorkers[i];
 
-                WriteWorker(worker, bw);
+                WriteWorker(worker, _bw);
             }
 
             for (int i = 0; i < CookConst.RESULT_STATE.Length; i++)
@@ -843,37 +839,35 @@ namespace Cook_lib
 
                 if (result != null)
                 {
-                    bw.Write(true);
+                    _bw.Write(true);
 
-                    WriteDishResult(result, bw);
+                    WriteDishResult(result, _bw);
                 }
                 else
                 {
-                    bw.Write(false);
+                    _bw.Write(false);
                 }
 
                 result = oResult[i];
 
                 if (result != null)
                 {
-                    bw.Write(true);
+                    _bw.Write(true);
 
-                    WriteDishResult(result, bw);
+                    WriteDishResult(result, _bw);
                 }
                 else
                 {
-                    bw.Write(false);
+                    _bw.Write(false);
                 }
             }
 
-            bw.Write(require.Count);
+            _bw.Write(require.Count);
 
             for (int i = 0; i < require.Count; i++)
             {
-                WriteDishRequirement(require[i], bw);
+                WriteDishRequirement(require[i], _bw);
             }
-
-            return ms;
         }
 
         internal void FromBytes(BinaryReader _br)

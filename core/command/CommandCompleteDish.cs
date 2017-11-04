@@ -15,8 +15,15 @@ namespace Cook_lib
             targetPos = _targetPos;
         }
 
+        public void SetIsMine(bool _isMine)
+        {
+            isMine = _isMine;
+        }
+
         public void ToBytes(BinaryWriter _bw)
         {
+            _bw.Write((byte)CommandType.COMPLETE_DISH);
+
             _bw.Write(isMine);
 
             _bw.Write(pos);

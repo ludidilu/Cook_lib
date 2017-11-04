@@ -14,5 +14,6 @@ namespace Cook_lib
     {
         void ToBytes(BinaryWriter _bw);
         void FromBytes(BinaryReader _br);
+        void SetIsMine(bool _isMine);
     }
 }
