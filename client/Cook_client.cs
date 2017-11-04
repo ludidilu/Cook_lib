@@ -172,5 +172,32 @@ namespace Cook_lib
                 }
             }
         }
+
+
+
+        public List<CookMain.DishData> GetDishData(bool _isMine)
+        {
+            return _isMine ? main.mDish : main.oDish;
+        }
+
+        public CookMain.Worker[] GetWorders(bool _isMine)
+        {
+            return _isMine ? main.mWorkers : main.oWorkers;
+        }
+
+        public CookMain.DishResult[] GetDishResult(bool _isMine)
+        {
+            return _isMine ? main.mResult : main.oResult;
+        }
+
+        public List<CookMain.DishRequirement> GetRequirement()
+        {
+            return main.require;
+        }
+
+        public int GetTick()
+        {
+            return main.tick;
+        }
     }
 }

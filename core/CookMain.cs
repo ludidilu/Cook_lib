@@ -56,23 +56,23 @@ namespace Cook_lib
             public int punishTick = 0;
         }
 
-        private List<DishData> mDish = new List<DishData>();
+        internal List<DishData> mDish = new List<DishData>();
 
-        private List<DishData> oDish = new List<DishData>();
+        internal List<DishData> oDish = new List<DishData>();
 
-        private Worker[] mWorkers = new Worker[CookConst.WORKER_NUM];
+        internal Worker[] mWorkers = new Worker[CookConst.WORKER_NUM];
 
-        private Worker[] oWorkers = new Worker[CookConst.WORKER_NUM];
+        internal Worker[] oWorkers = new Worker[CookConst.WORKER_NUM];
 
-        private DishResult[] mResult = new DishResult[CookConst.RESULT_STATE.Length];
+        internal DishResult[] mResult = new DishResult[CookConst.RESULT_STATE.Length];
 
-        private DishResult[] oResult = new DishResult[CookConst.RESULT_STATE.Length];
+        internal DishResult[] oResult = new DishResult[CookConst.RESULT_STATE.Length];
 
-        private List<DishRequirement> require = new List<DishRequirement>();
+        internal List<DishRequirement> require = new List<DishRequirement>();
 
         private List<IDishSDS> dishAll = new List<IDishSDS>();
 
-        public int tick { private set; get; }
+        internal int tick { private set; get; }
 
         private SuperRandom random = new SuperRandom();
 
