@@ -4,10 +4,11 @@
     {
         int GetID();
         float GetPrepareTime();
-        float GetDecreaseValue();
+        float GetPrepareDecreaseValue();
         float GetCookTime();
-        float GetExceedTime();
         float GetOptimizeTime();
+        float GetOptimizeDecreaseValue();
+        float GetExceedTime();
         bool GetIsUniversal();
         int GetMaxNum();
         int GetMoney();

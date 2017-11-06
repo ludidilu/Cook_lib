@@ -448,7 +448,7 @@ namespace Cook_lib
                     {
                         case DishState.PREPAREING:
 
-                            data.time -= data.sds.GetDecreaseValue();
+                            data.time -= data.sds.GetPrepareDecreaseValue();
 
                             if (data.time < 0)
                             {
@@ -474,6 +474,17 @@ namespace Cook_lib
                                 data.result.sds = data.sds;
 
                                 eventCallBack?.Invoke(new EventDishResultAppear(_isMine, i));
+                            }
+
+                            break;
+
+                        case DishState.OPTIMIZING:
+
+                            data.time -= data.sds.GetOptimizeDecreaseValue();
+
+                            if (data.time < 0)
+                            {
+                                data.time = 0;
                             }
 
                             break;
@@ -562,7 +573,7 @@ namespace Cook_lib
                 {
                     worker.pos = -1;
 
-                    worker.punishTick = CookConst.WORKER_PUNISH_TICK;
+                    worker.punishTick = (int)(CookConst.WORKER_PUNISH_TIME * CookConst.TICK_NUM_PER_SECOND);
                 }
                 else
                 {
@@ -573,7 +584,7 @@ namespace Cook_lib
 
                     if (worker.pos != -1)
                     {
-                        worker.punishTick = CookConst.WORKER_PUNISH_TICK;
+                        worker.punishTick = (int)(CookConst.WORKER_PUNISH_TIME * CookConst.TICK_NUM_PER_SECOND);
                     }
 
                     worker.pos = _command.targetPos;

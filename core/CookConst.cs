@@ -16,7 +16,7 @@
 
         public const int WORKER_NUM = 1;
 
-        public const int WORKER_PUNISH_TICK = 25;
+        public const float WORKER_PUNISH_TIME = 2;
 
         public const float OPTIMIZE_PROBABILITY_MAX = 0.7f;
     }
