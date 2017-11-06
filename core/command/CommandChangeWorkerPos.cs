@@ -6,13 +6,13 @@ namespace Cook_lib
     {
         public bool isMine;
         public int workerIndex;
-        public int pos;
+        public int targetPos;
 
-        public CommandChangeWorkerPos(bool _isMine, int _workerIndex, int _pos)
+        public CommandChangeWorkerPos(bool _isMine, int _workerIndex, int _targetPos)
         {
             isMine = _isMine;
             workerIndex = _workerIndex;
-            pos = _pos;
+            targetPos = _targetPos;
         }
 
         public void SetIsMine(bool _isMine)
@@ -28,7 +28,7 @@ namespace Cook_lib
 
             _bw.Write(workerIndex);
 
-            _bw.Write(pos);
+            _bw.Write(targetPos);
         }
 
         public void FromBytes(BinaryReader _br)
@@ -37,7 +37,7 @@ namespace Cook_lib
 
             workerIndex = _br.ReadInt32();
 
-            pos = _br.ReadInt32();
+            targetPos = _br.ReadInt32();
         }
     }
 }
