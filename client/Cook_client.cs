@@ -9,7 +9,7 @@ namespace Cook_lib
         void SendData(MemoryStream _ms);
         void SendData(MemoryStream _ms, Action<BinaryReader> _callBack);
         void RefreshData();
-        void Update();
+        void UpdateCallBack();
         void TriggerEvent(ValueType _event);
     }
 
@@ -127,7 +127,7 @@ namespace Cook_lib
 
             main.Update(randomSeed);
 
-            client.Update();
+            client.UpdateCallBack();
         }
 
         public void ChangeResultPos(int _pos, int _targetPos)
