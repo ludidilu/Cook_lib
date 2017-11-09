@@ -5,46 +5,6 @@ using superRandom;
 
 namespace Cook_lib
 {
-    public enum DishState
-    {
-        NULL,
-        PREPAREING,
-        COOKING,
-        OPTIMIZING
-    }
-
-    public class DishData
-    {
-        public IDishSDS sds;
-        public DishState state;
-        public float time;
-        public DishResult result;
-    }
-
-    public class DishResult : DishResultBase
-    {
-        public int time;
-    }
-
-    public class DishResultBase
-    {
-        public IDishSDS sds;
-        public bool isOptimized;
-    }
-
-    public class DishRequirement
-    {
-        public int uid;
-        public DishResultBase[] dishArr;
-        public int time;
-    }
-
-    public class Worker
-    {
-        public int pos = -1;
-        public int punishTick = 0;
-    }
-
     internal class CookMain
     {
         internal static Func<int, IDishSDS> getDishData;
@@ -57,19 +17,11 @@ namespace Cook_lib
             };
         }
 
-        internal List<DishData> mDish = new List<DishData>();
+        internal PlayerData mData = new PlayerData();
 
-        internal List<DishData> oDish = new List<DishData>();
+        internal PlayerData oData = new PlayerData();
 
-        internal Worker[] mWorkers = new Worker[CookConst.WORKER_NUM];
-
-        internal Worker[] oWorkers = new Worker[CookConst.WORKER_NUM];
-
-        internal DishResult[] mResult = new DishResult[CookConst.RESULT_STATE.Length];
-
-        internal DishResult[] oResult = new DishResult[CookConst.RESULT_STATE.Length];
-
-        internal List<DishRequirement> require = new List<DishRequirement>();
+        internal Dictionary<int, DishRequirement> require = new Dictionary<int, DishRequirement>();
 
         private List<IDishSDS> dishAll = new List<IDishSDS>();
 
@@ -78,15 +30,6 @@ namespace Cook_lib
         private SuperRandom random = new SuperRandom();
 
         private Action<ValueType> eventCallBack;
-
-        public CookMain()
-        {
-            for (int i = 0; i < CookConst.WORKER_NUM; i++)
-            {
-                mWorkers[i] = new Worker();
-                oWorkers[i] = new Worker();
-            }
-        }
 
         internal void SetEventCallBack(Action<ValueType> _eventCallBack)
         {
@@ -97,46 +40,20 @@ namespace Cook_lib
         {
             Reset();
 
-            for (int i = 0; i < _mDish.Count; i++)
-            {
-                DishData data = new DishData();
+            mData.SetDishData(_mDish);
 
-                IDishSDS sds = getDishData(_mDish[i]);
+            oData.SetDishData(_oDish);
 
-                data.sds = sds;
+            InitDishAll(mData);
 
-                mDish.Add(data);
-            }
-
-            for (int i = 0; i < _oDish.Count; i++)
-            {
-                DishData data = new DishData();
-
-                IDishSDS sds = getDishData(_oDish[i]);
-
-                data.sds = sds;
-
-                oDish.Add(data);
-            }
-
-            InitDishAll();
+            InitDishAll(oData);
         }
 
-        private void InitDishAll()
+        private void InitDishAll(PlayerData _playerData)
         {
-            for (int i = 0; i < mDish.Count; i++)
+            for (int i = 0; i < _playerData.dish.Count; i++)
             {
-                DishData data = mDish[i];
-
-                if (!data.sds.GetIsUniversal() && !dishAll.Contains(data.sds))
-                {
-                    dishAll.Add(data.sds);
-                }
-            }
-
-            for (int i = 0; i < oDish.Count; i++)
-            {
-                DishData data = oDish[i];
+                DishData data = _playerData.dish[i];
 
                 if (!data.sds.GetIsUniversal() && !dishAll.Contains(data.sds))
                 {
@@ -168,17 +85,34 @@ namespace Cook_lib
 
         private void RefreshRequire()
         {
-            for (int i = require.Count - 1; i > -1; i--)
+            List<int> delList = null;
+
+            IEnumerator<DishRequirement> enumerator = require.Values.GetEnumerator();
+
+            while (enumerator.MoveNext())
             {
-                DishRequirement requirement = require[i];
+                DishRequirement requirement = enumerator.Current;
 
                 requirement.time++;
 
                 if (requirement.time > CookConst.REQUIRE_EXCEED_TIME * CookConst.TICK_NUM_PER_SECOND)
                 {
-                    require.RemoveAt(i);
+                    if (delList == null)
+                    {
+                        delList = new List<int>();
+                    }
+
+                    delList.Add(requirement.uid);
 
                     eventCallBack?.Invoke(new EventRequirementDisappear(requirement.uid));
+                }
+            }
+
+            if (delList != null)
+            {
+                for (int i = 0; i < delList.Count; i++)
+                {
+                    require.Remove(delList[i]);
                 }
             }
 
@@ -186,7 +120,7 @@ namespace Cook_lib
             {
                 DishRequirement requirement = GetRequire();
 
-                require.Add(requirement);
+                require.Add(requirement.uid, requirement);
 
                 eventCallBack?.Invoke(new EventRequirementAppear(requirement.uid));
             }
@@ -276,7 +210,7 @@ namespace Cook_lib
 
         private void RefreshWorker(bool _isMine)
         {
-            Worker[] workers = _isMine ? mWorkers : oWorkers;
+            Worker[] workers = _isMine ? mData.workers : oData.workers;
 
             for (int i = 0; i < CookConst.WORKER_NUM; i++)
             {
@@ -291,7 +225,7 @@ namespace Cook_lib
 
         private void RefreshResult(bool _isMine)
         {
-            DishResult[] results = _isMine ? mResult : oResult;
+            DishResult[] results = _isMine ? mData.result : oData.result;
 
             for (int i = 0; i < results.Length; i++)
             {
@@ -318,13 +252,13 @@ namespace Cook_lib
 
             if (_isMine)
             {
-                workers = mWorkers;
-                dish = mDish;
+                workers = mData.workers;
+                dish = mData.dish;
             }
             else
             {
-                workers = oWorkers;
-                dish = oDish;
+                workers = oData.workers;
+                dish = oData.dish;
             }
 
             for (int i = 0; i < dish.Count; i++)
@@ -506,32 +440,11 @@ namespace Cook_lib
         {
             tick = 0;
 
-            mDish.Clear();
-            oDish.Clear();
-
-            for (int i = 0; i < CookConst.RESULT_STATE.Length; i++)
-            {
-                mResult[i] = null;
-                oResult[i] = null;
-            }
+            mData.Clear();
+            oData.Clear();
 
             require.Clear();
             dishAll.Clear();
-
-            for (int i = 0; i < CookConst.WORKER_NUM; i++)
-            {
-                Worker worker = mWorkers[i];
-
-                worker.pos = -1;
-
-                worker.punishTick = 0;
-
-                worker = oWorkers[i];
-
-                worker.pos = -1;
-
-                worker.punishTick = 0;
-            }
         }
 
 
@@ -550,19 +463,19 @@ namespace Cook_lib
         {
             if (_command.isMine)
             {
-                GetCommandChangeWorkerPosReal(_command, mWorkers, mDish);
+                GetCommandChangeWorkerPosReal(_command, mData);
             }
             else
             {
-                GetCommandChangeWorkerPosReal(_command, oWorkers, oDish);
+                GetCommandChangeWorkerPosReal(_command, oData);
             }
         }
 
-        private void GetCommandChangeWorkerPosReal(CommandChangeWorkerPos _command, Worker[] _workers, List<DishData> _dish)
+        private void GetCommandChangeWorkerPosReal(CommandChangeWorkerPos _command, PlayerData _playerData)
         {
-            if (_command.targetPos > -2 && _command.targetPos < _dish.Count && _command.workerIndex > -1 && _command.workerIndex < CookConst.WORKER_NUM)
+            if (_command.targetPos > -2 && _command.targetPos < _playerData.dish.Count && _command.workerIndex > -1 && _command.workerIndex < CookConst.WORKER_NUM)
             {
-                Worker worker = _workers[_command.workerIndex];
+                Worker worker = _playerData.workers[_command.workerIndex];
 
                 if (worker.pos == _command.targetPos)
                 {
@@ -577,7 +490,7 @@ namespace Cook_lib
                 }
                 else
                 {
-                    if (!CheckCanChangeWorkerPos(_command.workerIndex, _workers, _command.targetPos))
+                    if (!CheckCanChangeWorkerPos(_command.workerIndex, _playerData.workers, _command.targetPos))
                     {
                         return;
                     }
@@ -616,35 +529,35 @@ namespace Cook_lib
         {
             if (_command.isMine)
             {
-                GetCommandChangeResultPosReal(_command, mResult);
+                GetCommandChangeResultPosReal(_command, mData);
             }
             else
             {
-                GetCommandChangeResultPosReal(_command, oResult);
+                GetCommandChangeResultPosReal(_command, oData);
             }
         }
 
-        private void GetCommandChangeResultPosReal(CommandChangeResultPos _command, DishResult[] _result)
+        private void GetCommandChangeResultPosReal(CommandChangeResultPos _command, PlayerData _playerData)
         {
-            if (_command.pos > -1 && _command.pos < _result.Length)
+            if (_command.pos > -1 && _command.pos < _playerData.result.Length)
             {
-                DishResult result = _result[_command.pos];
+                DishResult result = _playerData.result[_command.pos];
 
                 if (result != null)
                 {
                     if (_command.targetPos == -1)
                     {
-                        _result[_command.pos] = null;
+                        _playerData.result[_command.pos] = null;
 
                         eventCallBack?.Invoke(_command);
                     }
                     else
                     {
-                        if (_command.targetPos > -1 && _command.targetPos < _result.Length && _command.pos != _command.targetPos)
+                        if (_command.targetPos > -1 && _command.targetPos < _playerData.result.Length && _command.pos != _command.targetPos)
                         {
-                            _result[_command.pos] = _result[_command.targetPos];
+                            _playerData.result[_command.pos] = _playerData.result[_command.targetPos];
 
-                            _result[_command.targetPos] = result;
+                            _playerData.result[_command.targetPos] = result;
 
                             eventCallBack?.Invoke(_command);
                         }
@@ -657,23 +570,23 @@ namespace Cook_lib
         {
             if (_command.isMine)
             {
-                GetCommandCompleteDishReal(_command, mDish, mResult);
+                GetCommandCompleteDishReal(_command, mData);
             }
             else
             {
-                GetCommandCompleteDishReal(_command, oDish, oResult);
+                GetCommandCompleteDishReal(_command, oData);
             }
         }
 
-        private void GetCommandCompleteDishReal(CommandCompleteDish _command, List<DishData> _dish, DishResult[] _result)
+        private void GetCommandCompleteDishReal(CommandCompleteDish _command, PlayerData _playerData)
         {
-            if (_command.pos > -1 && _command.pos < _dish.Count)
+            if (_command.pos > -1 && _command.pos < _playerData.dish.Count)
             {
-                DishData dish = _dish[_command.pos];
+                DishData dish = _playerData.dish[_command.pos];
 
-                if (dish.result != null && _command.targetPos > -1 && _command.targetPos < _result.Length && _result[_command.targetPos] == null)
+                if (dish.result != null && _command.targetPos > -1 && _command.targetPos < _playerData.result.Length && _playerData.result[_command.targetPos] == null)
                 {
-                    _result[_command.targetPos] = dish.result;
+                    _playerData.result[_command.targetPos] = dish.result;
 
                     dish.result = null;
 
@@ -686,31 +599,26 @@ namespace Cook_lib
 
         internal void GetCommandCompleteRequirement(CommandCompleteRequirement _command)
         {
-            for (int i = 0; i < require.Count; i++)
+            DishRequirement requirement;
+
+            if (require.TryGetValue(_command.requirementUid, out requirement))
             {
-                DishRequirement requirement = require[i];
+                DishResult[] resultArr = _command.isMine ? mData.result : oData.result;
 
-                if (requirement.uid == _command.requirementUid)
+                if (CheckCanCompleteRequirement(_command.resultList, resultArr, requirement))
                 {
-                    DishResult[] resultArr = _command.isMine ? mResult : oResult;
+                    AddReward(_command.isMine, requirement);
 
-                    if (CheckCanCompleteRequirement(_command.resultList, resultArr, requirement))
+                    require.Remove(requirement.uid);
+
+                    for (int m = 0; m < _command.resultList.Count; m++)
                     {
-                        AddReward(_command.isMine, requirement);
+                        int index = _command.resultList[m];
 
-                        require.RemoveAt(i);
-
-                        for (int m = 0; m < _command.resultList.Count; m++)
-                        {
-                            int index = _command.resultList[m];
-
-                            resultArr[index] = null;
-                        }
-
-                        eventCallBack?.Invoke(_command);
+                        resultArr[index] = null;
                     }
 
-                    break;
+                    eventCallBack?.Invoke(_command);
                 }
             }
         }
@@ -853,65 +761,17 @@ namespace Cook_lib
         {
             _bw.Write(tick);
 
-            _bw.Write(mDish.Count);
+            mData.ToBytes(_bw);
 
-            for (int i = 0; i < mDish.Count; i++)
-            {
-                WriteDishData(mDish[i], _bw);
-            }
-
-            _bw.Write(oDish.Count);
-
-            for (int i = 0; i < oDish.Count; i++)
-            {
-                WriteDishData(oDish[i], _bw);
-            }
-
-            for (int i = 0; i < CookConst.WORKER_NUM; i++)
-            {
-                Worker worker = mWorkers[i];
-
-                WriteWorker(worker, _bw);
-
-                worker = oWorkers[i];
-
-                WriteWorker(worker, _bw);
-            }
-
-            for (int i = 0; i < CookConst.RESULT_STATE.Length; i++)
-            {
-                DishResult result = mResult[i];
-
-                if (result != null)
-                {
-                    _bw.Write(true);
-
-                    WriteDishResult(result, _bw);
-                }
-                else
-                {
-                    _bw.Write(false);
-                }
-
-                result = oResult[i];
-
-                if (result != null)
-                {
-                    _bw.Write(true);
-
-                    WriteDishResult(result, _bw);
-                }
-                else
-                {
-                    _bw.Write(false);
-                }
-            }
+            oData.ToBytes(_bw);
 
             _bw.Write(require.Count);
 
-            for (int i = 0; i < require.Count; i++)
+            IEnumerator<DishRequirement> enumerator = require.Values.GetEnumerator();
+
+            while (enumerator.MoveNext())
             {
-                WriteDishRequirement(require[i], _bw);
+                enumerator.Current.ToBytes(_bw);
             }
         }
 
@@ -921,226 +781,24 @@ namespace Cook_lib
 
             tick = _br.ReadInt32();
 
+            mData.FromBytes(_br);
+
+            oData.FromBytes(_br);
+
             int num = _br.ReadInt32();
-
-            for (int i = 0; i < num; i++)
-            {
-                DishData data = new DishData();
-
-                ReadDishData(data, _br);
-
-                mDish.Add(data);
-            }
-
-            num = _br.ReadInt32();
-
-            for (int i = 0; i < num; i++)
-            {
-                DishData data = new DishData();
-
-                ReadDishData(data, _br);
-
-                oDish.Add(data);
-            }
-
-            for (int i = 0; i < CookConst.WORKER_NUM; i++)
-            {
-                ReadWorker(mWorkers[i], _br);
-                ReadWorker(oWorkers[i], _br);
-            }
-
-            for (int i = 0; i < CookConst.RESULT_STATE.Length; i++)
-            {
-                bool b = _br.ReadBoolean();
-
-                if (b)
-                {
-                    DishResult result = mResult[i];
-
-                    if (result == null)
-                    {
-                        result = new DishResult();
-
-                        mResult[i] = result;
-                    }
-
-                    ReadDishResult(result, _br);
-                }
-                else
-                {
-                    mResult[i] = null;
-                }
-
-                b = _br.ReadBoolean();
-
-                if (b)
-                {
-                    DishResult result = oResult[i];
-
-                    if (result == null)
-                    {
-                        result = new DishResult();
-
-                        oResult[i] = result;
-                    }
-
-                    ReadDishResult(result, _br);
-                }
-                else
-                {
-                    oResult[i] = null;
-                }
-            }
-
-            num = _br.ReadInt32();
 
             for (int i = 0; i < num; i++)
             {
                 DishRequirement requirement = new DishRequirement();
 
-                ReadDishRequirement(requirement, _br);
+                requirement.FromBytes(_br);
 
-                require.Add(requirement);
+                require.Add(requirement.uid, requirement);
             }
 
-            InitDishAll();
-        }
+            InitDishAll(mData);
 
-        private void WriteDishData(DishData _data, BinaryWriter _bw)
-        {
-            _bw.Write(_data.sds.GetID());
-
-            _bw.Write((byte)_data.state);
-
-            _bw.Write(_data.time);
-
-            DishResult result = _data.result;
-
-            if (result != null)
-            {
-                _bw.Write(true);
-
-                WriteDishResult(result, _bw);
-            }
-            else
-            {
-                _bw.Write(false);
-            }
-        }
-
-        private void ReadDishData(DishData _data, BinaryReader _br)
-        {
-            int id = _br.ReadInt32();
-
-            _data.sds = getDishData(id);
-
-            _data.state = (DishState)_br.ReadByte();
-
-            _data.time = _br.ReadSingle();
-
-            bool b = _br.ReadBoolean();
-
-            if (b)
-            {
-                DishResult result = _data.result;
-
-                if (result == null)
-                {
-                    result = new DishResult();
-
-                    _data.result = result;
-                }
-
-                ReadDishResult(result, _br);
-            }
-            else
-            {
-                _data.result = null;
-            }
-        }
-
-        private void WriteDishResult(DishResult _result, BinaryWriter _bw)
-        {
-            _bw.Write(_result.sds.GetID());
-
-            _bw.Write(_result.isOptimized);
-
-            _bw.Write(_result.time);
-        }
-
-        private void ReadDishResult(DishResult _result, BinaryReader _br)
-        {
-            int id = _br.ReadInt32();
-
-            _result.sds = getDishData(id);
-
-            _result.isOptimized = _br.ReadBoolean();
-
-            _result.time = _br.ReadInt32();
-        }
-
-        private void WriteDishResultBase(DishResultBase _result, BinaryWriter _bw)
-        {
-            _bw.Write(_result.sds.GetID());
-
-            _bw.Write(_result.isOptimized);
-        }
-
-        private void ReadDishResultBase(DishResultBase _result, BinaryReader _br)
-        {
-            int id = _br.ReadInt32();
-
-            _result.sds = getDishData(id);
-
-            _result.isOptimized = _br.ReadBoolean();
-        }
-
-        private void WriteDishRequirement(DishRequirement _requirement, BinaryWriter _bw)
-        {
-            _bw.Write(_requirement.uid);
-
-            _bw.Write(_requirement.dishArr.Length);
-
-            for (int i = 0; i < _requirement.dishArr.Length; i++)
-            {
-                WriteDishResultBase(_requirement.dishArr[i], _bw);
-            }
-
-            _bw.Write(_requirement.time);
-        }
-
-        private void ReadDishRequirement(DishRequirement _requirement, BinaryReader _br)
-        {
-            _requirement.uid = _br.ReadInt32();
-
-            int num = _br.ReadInt32();
-
-            _requirement.dishArr = new DishResultBase[num];
-
-            for (int i = 0; i < num; i++)
-            {
-                DishResultBase result = new DishResultBase();
-
-                ReadDishResultBase(result, _br);
-
-                _requirement.dishArr[i] = result;
-            }
-
-            _requirement.time = _br.ReadInt32();
-        }
-
-        private void WriteWorker(Worker _worker, BinaryWriter _bw)
-        {
-            _bw.Write(_worker.pos);
-
-            _bw.Write(_worker.punishTick);
-        }
-
-        private void ReadWorker(Worker _worker, BinaryReader _br)
-        {
-            _worker.pos = _br.ReadInt32();
-
-            _worker.punishTick = _br.ReadInt32();
+            InitDishAll(oData);
         }
     }
 }

@@ -175,22 +175,12 @@ namespace Cook_lib
 
 
 
-        public List<DishData> GetDishData(bool _isMine)
+        public PlayerData GetPlayerData(bool _isMine)
         {
-            return _isMine ? main.mDish : main.oDish;
+            return _isMine ? main.mData : main.oData;
         }
 
-        public Worker[] GetWorders(bool _isMine)
-        {
-            return _isMine ? main.mWorkers : main.oWorkers;
-        }
-
-        public DishResult[] GetDishResult(bool _isMine)
-        {
-            return _isMine ? main.mResult : main.oResult;
-        }
-
-        public List<DishRequirement> GetRequirement()
+        public Dictionary<int, DishRequirement> GetRequirement()
         {
             return main.require;
         }

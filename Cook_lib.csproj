@@ -67,6 +67,7 @@
     <Compile Include="core\command\CommandConst.cs" />
     <Compile Include="core\CookConst.cs" />
     <Compile Include="core\CookMain.cs" />
+    <Compile Include="core\CookMainData.cs" />
     <Compile Include="core\timeEvent\EventDishResultAppear.cs" />
     <Compile Include="core\timeEvent\EventDishResultBeOptimized.cs" />
     <Compile Include="core\timeEvent\EventDishResultDisappear.cs" />
