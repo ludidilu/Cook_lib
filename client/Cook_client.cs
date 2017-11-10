@@ -15,6 +15,11 @@ namespace Cook_lib
 
     public class Cook_client
     {
+        public static void Init<T>(Dictionary<int, T> _dic) where T : IDishSDS
+        {
+            CookMain.Init(_dic);
+        }
+
         private CookMain main = new CookMain();
 
         private IClient client;

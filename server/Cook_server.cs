@@ -6,6 +6,11 @@ namespace Cook_lib
 {
     public class Cook_server
     {
+        public static void Init<T>(Dictionary<int, T> _dic) where T : IDishSDS
+        {
+            CookMain.Init(_dic);
+        }
+
         private static Random random = new Random();
 
         private CookMain main = new CookMain();
