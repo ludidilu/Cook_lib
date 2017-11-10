@@ -66,8 +66,6 @@ namespace Cook_lib
         {
             random.SetSeed(_randomSeed);
 
-            tick++;
-
             RefreshRequire();
 
             RefreshWorker(true);
@@ -81,6 +79,8 @@ namespace Cook_lib
             RefreshDish(true);
 
             RefreshDish(false);
+
+            tick++;
         }
 
         private void RefreshRequire()
@@ -584,9 +584,12 @@ namespace Cook_lib
             {
                 DishData dish = _playerData.dish[_command.pos];
 
-                if (dish.result != null && _command.targetPos > -1 && _command.targetPos < _playerData.result.Length && _playerData.result[_command.targetPos] == null)
+                if (dish.result != null)
                 {
-                    _playerData.result[_command.targetPos] = dish.result;
+                    if (_command.targetPos > -1 && _command.targetPos < _playerData.result.Length && _playerData.result[_command.targetPos] == null)
+                    {
+                        _playerData.result[_command.targetPos] = dish.result;
+                    }
 
                     dish.result = null;
 
