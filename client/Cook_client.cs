@@ -194,5 +194,12 @@ namespace Cook_lib
         {
             return main.tick;
         }
+
+        public bool CheckCanCompleteRequirement(List<int> _resultList, DishRequirement _requirement)
+        {
+            DishResult[] resultArr = clientIsMine ? main.mData.result : main.oData.result;
+
+            return main.CheckCanCompleteRequirement(_resultList, resultArr, _requirement);
+        }
     }
 }
