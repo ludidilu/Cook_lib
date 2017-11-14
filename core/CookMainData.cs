@@ -54,7 +54,7 @@ namespace Cook_lib
             {
                 Worker worker = workers[i];
 
-                worker.pos = -1;
+                worker.pos = -1 - i;
 
                 worker.punishTick = 0;
             }

@@ -269,7 +269,7 @@ namespace Cook_lib
                 {
                     data.result.time++;
 
-                    if (data.time > data.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
+                    if (data.result.time > data.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
                     {
                         data.time = 0;
 
@@ -473,7 +473,7 @@ namespace Cook_lib
 
         private void GetCommandChangeWorkerPosReal(CommandChangeWorkerPos _command, PlayerData _playerData)
         {
-            if (_command.targetPos > -2 && _command.targetPos < _playerData.dish.Count && _command.workerIndex > -1 && _command.workerIndex < CookConst.WORKER_NUM)
+            if (_command.targetPos >= -CookConst.WORKER_NUM && _command.targetPos < _playerData.dish.Count && _command.workerIndex > -1 && _command.workerIndex < CookConst.WORKER_NUM)
             {
                 Worker worker = _playerData.workers[_command.workerIndex];
 
@@ -482,9 +482,9 @@ namespace Cook_lib
                     return;
                 }
 
-                if (_command.targetPos == -1)
+                if (_command.targetPos < 0)
                 {
-                    worker.pos = -1;
+                    worker.pos = _command.targetPos;
 
                     worker.punishTick = (int)(CookConst.WORKER_PUNISH_TIME * CookConst.TICK_NUM_PER_SECOND);
                 }
@@ -495,7 +495,7 @@ namespace Cook_lib
                         return;
                     }
 
-                    if (worker.pos != -1)
+                    if (worker.pos > -1)
                     {
                         worker.punishTick = (int)(CookConst.WORKER_PUNISH_TIME * CookConst.TICK_NUM_PER_SECOND);
                     }
@@ -594,6 +594,8 @@ namespace Cook_lib
                     dish.result = null;
 
                     dish.state = DishState.NULL;
+
+                    dish.time = 0;
 
                     eventCallBack?.Invoke(_command);
                 }
