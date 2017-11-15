@@ -197,9 +197,9 @@ namespace Cook_lib
 
         public bool CheckCanCompleteRequirement(List<int> _resultList, DishRequirement _requirement)
         {
-            DishResult[] resultArr = clientIsMine ? main.mData.result : main.oData.result;
+            PlayerData playerData = clientIsMine ? main.mData : main.oData;
 
-            return main.CheckCanCompleteRequirement(_resultList, resultArr, _requirement);
+            return main.CheckCanCompleteRequirement(_resultList, playerData, _requirement);
         }
     }
 }

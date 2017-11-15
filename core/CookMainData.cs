@@ -191,7 +191,7 @@ namespace Cook_lib
 
     public class DishResult : DishResultBase
     {
-        public int time;
+        public float time;
 
         internal override void ToBytes(BinaryWriter _bw)
         {
@@ -204,7 +204,7 @@ namespace Cook_lib
         {
             base.FromBytes(_br);
 
-            time = _br.ReadInt32();
+            time = _br.ReadSingle();
         }
     }
 

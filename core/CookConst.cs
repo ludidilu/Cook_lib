@@ -14,10 +14,16 @@
 
         public const int REQUIRE_NUM_MAX = 4;
 
-        public const int WORKER_NUM = 1;
+        public const int WORKER_NUM = 2;
 
-        public const float WORKER_PUNISH_TIME = 2;
+        public const float WORKER_PUNISH_TIME = 1;
 
         public const float OPTIMIZE_PROBABILITY_MAX = 0.7f;
+
+        public const float EXCEED_VALUE_1 = 0f;
+
+        public const float EXCEED_VALUE_2 = 0.5f;
+
+        public const float EXCEED_VALUE_3 = 1.0f;
     }
 }

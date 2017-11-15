@@ -233,7 +233,7 @@ namespace Cook_lib
 
                 if (result != null && CookConst.RESULT_STATE[i])
                 {
-                    result.time++;
+                    result.time += CookConst.RESULT_STATE[i] ? CookConst.EXCEED_VALUE_2 : CookConst.EXCEED_VALUE_1;
 
                     if (result.time > result.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
                     {
@@ -264,22 +264,6 @@ namespace Cook_lib
             for (int i = 0; i < dish.Count; i++)
             {
                 DishData data = dish[i];
-
-                if (data.result != null)
-                {
-                    data.result.time++;
-
-                    if (data.result.time > data.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
-                    {
-                        data.time = 0;
-
-                        data.result = null;
-
-                        data.state = DishState.NULL;
-
-                        eventCallBack?.Invoke(new EventDishResultDisappear(_isMine, i));
-                    }
-                }
 
                 bool hasWorker = false;
 
@@ -372,12 +356,43 @@ namespace Cook_lib
 
                                 data.state = DishState.PREPAREING;
                             }
+                            else
+                            {
+                                data.result.time += CookConst.EXCEED_VALUE_3;
+
+                                if (data.result.time > data.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
+                                {
+                                    data.time = 0;
+
+                                    data.result = null;
+
+                                    data.state = DishState.NULL;
+
+                                    eventCallBack?.Invoke(new EventDishResultDisappear(_isMine, i));
+                                }
+                            }
 
                             break;
                     }
                 }
                 else
                 {
+                    if (data.result != null)
+                    {
+                        data.result.time += CookConst.EXCEED_VALUE_3;
+
+                        if (data.result.time > data.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
+                        {
+                            data.time = 0;
+
+                            data.result = null;
+
+                            data.state = DishState.NULL;
+
+                            eventCallBack?.Invoke(new EventDishResultDisappear(_isMine, i));
+                        }
+                    }
+
                     switch (data.state)
                     {
                         case DishState.PREPAREING:
@@ -608,9 +623,9 @@ namespace Cook_lib
 
             if (require.TryGetValue(_command.requirementUid, out requirement))
             {
-                DishResult[] resultArr = _command.isMine ? mData.result : oData.result;
+                PlayerData playerData = _command.isMine ? mData : oData;
 
-                if (CheckCanCompleteRequirement(_command.resultList, resultArr, requirement))
+                if (CheckCanCompleteRequirement(_command.resultList, playerData, requirement))
                 {
                     AddReward(_command.isMine, requirement);
 
@@ -620,7 +635,20 @@ namespace Cook_lib
                     {
                         int index = _command.resultList[m];
 
-                        resultArr[index] = null;
+                        if (index > -1)
+                        {
+                            playerData.result[index] = null;
+                        }
+                        else
+                        {
+                            DishData dish = playerData.dish[-index - 1];
+
+                            dish.result = null;
+
+                            dish.state = DishState.NULL;
+
+                            dish.time = 0;
+                        }
                     }
 
                     eventCallBack?.Invoke(_command);
@@ -633,7 +661,7 @@ namespace Cook_lib
 
         }
 
-        public bool CheckCanCompleteRequirement(List<int> _resultList, DishResult[] _resultArr, DishRequirement _requirement)
+        public bool CheckCanCompleteRequirement(List<int> _resultList, PlayerData _playerData, DishRequirement _requirement)
         {
             if (_resultList.Count != _requirement.dishArr.Length)
             {
@@ -646,9 +674,22 @@ namespace Cook_lib
             {
                 int index = _resultList[i];
 
-                if (index > -1 && index < _resultArr.Length)
+                if (index > -1 && index < _playerData.result.Length)
                 {
-                    DishResult result = _resultArr[index];
+                    DishResult result = _playerData.result[index];
+
+                    if (result != null && !resultList.Contains(result))
+                    {
+                        resultList.Add(result);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else if (index < 0 && index > -_playerData.dish.Count - 1)
+                {
+                    DishResult result = _playerData.dish[-index - 1].result;
 
                     if (result != null && !resultList.Contains(result))
                     {
