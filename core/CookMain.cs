@@ -93,6 +93,11 @@ namespace Cook_lib
             tick++;
         }
 
+        internal void UpdateTo(ushort _tick, List<ushort> _seedList)
+        {
+
+        }
+
         private void RefreshRequire()
         {
             List<int> delList = null;
@@ -133,6 +138,53 @@ namespace Cook_lib
                 require.Add(requirement.uid, requirement);
 
                 eventCallBack?.Invoke(new EventRequirementAppear(requirement.uid));
+            }
+        }
+
+        private void RefreshRequireTo(ushort _tick, List<ushort> _seedList)
+        {
+            int oldNum = tick / CookConst.REQUIRE_PRODUCE_TIME;
+
+            int newNum = _tick / CookConst.REQUIRE_PRODUCE_TIME;
+
+            for (int i = oldNum; i <= newNum; i++)
+            {
+                SetSeed(_seedList[i]);
+
+                DishRequirement requirement = GetRequire();
+
+                requirement.time = tick - i * CookConst.REQUIRE_PRODUCE_TIME;
+
+                require.Add(requirement.uid, requirement);
+            }
+
+            List<int> delList = null;
+
+            IEnumerator<DishRequirement> enumerator = require.Values.GetEnumerator();
+
+            while (enumerator.MoveNext())
+            {
+                DishRequirement requirement = enumerator.Current;
+
+                requirement.time += _tick - tick;
+
+                if (requirement.time > CookConst.REQUIRE_EXCEED_TIME * CookConst.TICK_NUM_PER_SECOND)
+                {
+                    if (delList == null)
+                    {
+                        delList = new List<int>();
+                    }
+
+                    delList.Add(requirement.uid);
+                }
+            }
+
+            if (delList != null)
+            {
+                for (int i = 0; i < delList.Count; i++)
+                {
+                    require.Remove(delList[i]);
+                }
             }
         }
 
@@ -233,6 +285,11 @@ namespace Cook_lib
             }
         }
 
+        private void RefreshWorkerTo(bool _isMine, ushort _tick)
+        {
+
+        }
+
         private void RefreshResult(bool _isMine)
         {
             DishResult[] results = _isMine ? mData.result : oData.result;
@@ -255,7 +312,224 @@ namespace Cook_lib
             }
         }
 
+        private void RefreshResultTo(bool _isMine, ushort _tick)
+        {
+            DishResult[] results = _isMine ? mData.result : oData.result;
+
+            for (int i = 0; i < results.Length; i++)
+            {
+                DishResult result = results[i];
+
+                if (result != null && CookConst.RESULT_STATE[i])
+                {
+                    result.time += (CookConst.RESULT_STATE[i] ? CookConst.EXCEED_VALUE_2 : CookConst.EXCEED_VALUE_1) * (_tick - tick);
+
+                    if (result.time > result.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
+                    {
+                        results[i] = null;
+                    }
+                }
+            }
+        }
+
         private void RefreshDish(bool _isMine)
+        {
+            Worker[] workers;
+            List<DishData> dish;
+
+            if (_isMine)
+            {
+                workers = mData.workers;
+                dish = mData.dish;
+            }
+            else
+            {
+                workers = oData.workers;
+                dish = oData.dish;
+            }
+
+            for (int i = 0; i < dish.Count; i++)
+            {
+                DishData data = dish[i];
+
+                bool hasWorker = false;
+
+                for (int m = 0; m < workers.Length; m++)
+                {
+                    Worker worker = workers[m];
+
+                    if (worker.pos == i)
+                    {
+                        if (worker.punishTick == 0)
+                        {
+                            hasWorker = true;
+                        }
+
+                        break;
+                    }
+                }
+
+                if (hasWorker)
+                {
+                    switch (data.state)
+                    {
+                        case DishState.PREPAREING:
+
+                            data.time++;
+
+                            if (data.time > data.sds.GetPrepareTime() * CookConst.TICK_NUM_PER_SECOND)
+                            {
+                                data.time = 0;
+
+                                if (data.sds.GetCookTime() > 0)
+                                {
+                                    data.state = DishState.COOKING;
+                                }
+                                else
+                                {
+                                    data.state = DishState.OPTIMIZING;
+
+                                    data.result = new DishResult();
+
+                                    data.result.sds = data.sds.GetResult();
+
+                                    eventCallBack?.Invoke(new EventDishResultAppear(_isMine, i));
+                                }
+                            }
+
+                            break;
+
+                        case DishState.COOKING:
+
+                            data.time++;
+
+                            if (data.time > data.sds.GetCookTime() * CookConst.TICK_NUM_PER_SECOND)
+                            {
+                                data.time = 0;
+
+                                data.state = DishState.OPTIMIZING;
+
+                                data.result = new DishResult();
+
+                                data.result.sds = data.sds.GetResult();
+
+                                eventCallBack?.Invoke(new EventDishResultAppear(_isMine, i));
+                            }
+
+                            break;
+
+                        case DishState.OPTIMIZING:
+
+                            data.time++;
+
+                            if (data.time > data.sds.GetOptimizeTime() * CookConst.TICK_NUM_PER_SECOND)
+                            {
+                                data.time = 0;
+
+                                data.state = DishState.NULL;
+
+                                data.result.isOptimized = true;
+
+                                eventCallBack?.Invoke(new EventDishResultBeOptimized(_isMine, i));
+                            }
+
+                            break;
+
+                        default:
+
+                            if (data.result == null)
+                            {
+                                data.time++;
+
+                                data.state = DishState.PREPAREING;
+                            }
+                            else
+                            {
+                                data.result.time += CookConst.EXCEED_VALUE_3;
+
+                                if (data.result.time > data.result.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
+                                {
+                                    data.time = 0;
+
+                                    data.result = null;
+
+                                    data.state = DishState.NULL;
+
+                                    eventCallBack?.Invoke(new EventDishResultDisappear(_isMine, i));
+                                }
+                            }
+
+                            break;
+                    }
+                }
+                else
+                {
+                    if (data.result != null)
+                    {
+                        data.result.time += CookConst.EXCEED_VALUE_3;
+
+                        if (data.result.time > data.result.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
+                        {
+                            data.time = 0;
+
+                            data.result = null;
+
+                            data.state = DishState.NULL;
+
+                            eventCallBack?.Invoke(new EventDishResultDisappear(_isMine, i));
+                        }
+                    }
+
+                    switch (data.state)
+                    {
+                        case DishState.PREPAREING:
+
+                            data.time -= data.sds.GetPrepareDecreaseValue();
+
+                            if (data.time < 0)
+                            {
+                                data.time = 0;
+
+                                data.state = DishState.NULL;
+                            }
+
+                            break;
+
+                        case DishState.COOKING:
+
+                            data.time++;
+
+                            if (data.time > data.sds.GetCookTime() * CookConst.TICK_NUM_PER_SECOND)
+                            {
+                                data.time = 0;
+
+                                data.state = DishState.OPTIMIZING;
+
+                                data.result = new DishResult();
+
+                                data.result.sds = data.sds.GetResult();
+
+                                eventCallBack?.Invoke(new EventDishResultAppear(_isMine, i));
+                            }
+
+                            break;
+
+                        case DishState.OPTIMIZING:
+
+                            data.time -= data.sds.GetOptimizeDecreaseValue();
+
+                            if (data.time < 0)
+                            {
+                                data.time = 0;
+                            }
+
+                            break;
+                    }
+                }
+            }
+        }
+
+        private void RefreshDishTo(bool _isMine, ushort _tick)
         {
             Worker[] workers;
             List<DishData> dish;
