@@ -6,9 +6,9 @@ namespace Cook_lib
 {
     public class Cook_server
     {
-        public static void Init<T>(Dictionary<int, T> _dic) where T : IDishSDS
+        public static void Init<T, U>(Dictionary<int, T> _dishDic, Dictionary<int, U> _resultDic) where T : IDishSDS where U : IResultSDS
         {
-            CookMain.Init(_dic);
+            CookMain.Init(_dishDic, _resultDic);
         }
 
         private static Random random = new Random();
@@ -110,15 +110,18 @@ namespace Cook_lib
             {
                 using (BinaryWriter bw = new BinaryWriter(ms))
                 {
-                    int randomSeed = random.Next();
-
                     bw.Write(PackageTag.S2C_UPDATE);
 
                     bw.Write(main.tick);
 
-                    bw.Write(randomSeed);
+                    if (main.tick % CookConst.REQUIRE_PRODUCE_TIME == 0)
+                    {
+                        ushort randomSeed = (ushort)random.Next(ushort.MaxValue);
 
-                    bw.Write(commandList.Count);
+                        bw.Write(randomSeed);
+                    }
+
+                    bw.Write((ushort)commandList.Count);
 
                     for (int i = 0; i < commandList.Count; i++)
                     {
@@ -150,7 +153,7 @@ namespace Cook_lib
 
                     serverSendDataCallBack(false, true, ms);
 
-                    main.Update(randomSeed);
+                    main.Update();
                 }
             }
         }

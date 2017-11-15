@@ -2,21 +2,22 @@
 {
     internal class SuperRandom
     {
-        private const int A = 9;
-        private const int B = 7;
+        private const int A = 9301;
+        private const int C = 49297;
+        private const int M = 233280;
 
         private long v;
 
         internal void SetSeed(int _seed)
         {
-            v = (A * (long)_seed + B) % int.MaxValue;
+            v = (A * (long)_seed + C) % M;
         }
 
         internal double Get()
         {
-            v = (A * v + B) % int.MaxValue;
+            v = (A * v + C) % M;
 
-            return (double)v / int.MaxValue;
+            return (double)v / M;
         }
 
         internal int Get(int _max)

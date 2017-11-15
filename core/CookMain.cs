@@ -9,11 +9,18 @@ namespace Cook_lib
     {
         internal static Func<int, IDishSDS> getDishData;
 
-        internal static void Init<T>(Dictionary<int, T> _dic) where T : IDishSDS
+        internal static Func<int, IResultSDS> getResultData;
+
+        internal static void Init<T, U>(Dictionary<int, T> _dishDic, Dictionary<int, U> _resultDic) where T : IDishSDS where U : IResultSDS
         {
             getDishData = delegate (int _id)
             {
-                return _dic[_id];
+                return _dishDic[_id];
+            };
+
+            getResultData = delegate (int _id)
+            {
+                return _resultDic[_id];
             };
         }
 
@@ -23,9 +30,9 @@ namespace Cook_lib
 
         internal Dictionary<int, DishRequirement> require = new Dictionary<int, DishRequirement>();
 
-        private List<IDishSDS> dishAll = new List<IDishSDS>();
+        private List<IResultSDS> dishAll = new List<IResultSDS>();
 
-        internal int tick { private set; get; }
+        internal ushort tick { private set; get; }
 
         private SuperRandom random = new SuperRandom();
 
@@ -55,17 +62,20 @@ namespace Cook_lib
             {
                 DishData data = _playerData.dish[i];
 
-                if (!data.sds.GetIsUniversal() && !dishAll.Contains(data.sds))
+                if (!data.sds.GetResult().GetIsUniversal() && !dishAll.Contains(data.sds.GetResult()))
                 {
-                    dishAll.Add(data.sds);
+                    dishAll.Add(data.sds.GetResult());
                 }
             }
         }
 
-        internal void Update(int _randomSeed)
+        internal void SetSeed(int _seed)
         {
-            random.SetSeed(_randomSeed);
+            random.SetSeed(_seed);
+        }
 
+        internal void Update()
+        {
             RefreshRequire();
 
             RefreshWorker(true);
@@ -132,13 +142,13 @@ namespace Cook_lib
 
             requirement.uid = GetRequirementUid();
 
-            List<IDishSDS> list = new List<IDishSDS>(dishAll);
+            List<IResultSDS> list = new List<IResultSDS>(dishAll);
 
             int maxNum = list.Count;
 
             for (int i = 0; i < list.Count; i++)
             {
-                IDishSDS sds = list[i];
+                IResultSDS sds = list[i];
 
                 if (sds.GetMaxNum() > 1)
                 {
@@ -168,7 +178,7 @@ namespace Cook_lib
             {
                 int index = random.Get(list.Count);
 
-                IDishSDS sds = list[index];
+                IResultSDS sds = list[index];
 
                 if (sds.GetMaxNum() > 1)
                 {
@@ -304,7 +314,7 @@ namespace Cook_lib
 
                                     data.result = new DishResult();
 
-                                    data.result.sds = data.sds;
+                                    data.result.sds = data.sds.GetResult();
 
                                     eventCallBack?.Invoke(new EventDishResultAppear(_isMine, i));
                                 }
@@ -324,7 +334,7 @@ namespace Cook_lib
 
                                 data.result = new DishResult();
 
-                                data.result.sds = data.sds;
+                                data.result.sds = data.sds.GetResult();
 
                                 eventCallBack?.Invoke(new EventDishResultAppear(_isMine, i));
                             }
@@ -360,7 +370,7 @@ namespace Cook_lib
                             {
                                 data.result.time += CookConst.EXCEED_VALUE_3;
 
-                                if (data.result.time > data.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
+                                if (data.result.time > data.result.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
                                 {
                                     data.time = 0;
 
@@ -381,7 +391,7 @@ namespace Cook_lib
                     {
                         data.result.time += CookConst.EXCEED_VALUE_3;
 
-                        if (data.result.time > data.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
+                        if (data.result.time > data.result.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
                         {
                             data.time = 0;
 
@@ -420,7 +430,7 @@ namespace Cook_lib
 
                                 data.result = new DishResult();
 
-                                data.result.sds = data.sds;
+                                data.result.sds = data.sds.GetResult();
 
                                 eventCallBack?.Invoke(new EventDishResultAppear(_isMine, i));
                             }
@@ -825,7 +835,7 @@ namespace Cook_lib
         {
             Reset();
 
-            tick = _br.ReadInt32();
+            tick = _br.ReadUInt16();
 
             mData.FromBytes(_br);
 

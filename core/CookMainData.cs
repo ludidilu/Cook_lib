@@ -210,7 +210,7 @@ namespace Cook_lib
 
     public class DishResultBase
     {
-        public IDishSDS sds;
+        public IResultSDS sds;
         public bool isOptimized;
 
         internal virtual void ToBytes(BinaryWriter _bw)
@@ -224,7 +224,7 @@ namespace Cook_lib
         {
             int id = _br.ReadInt32();
 
-            sds = CookMain.getDishData(id);
+            sds = CookMain.getResultData(id);
 
             isOptimized = _br.ReadBoolean();
         }

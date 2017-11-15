@@ -15,9 +15,9 @@ namespace Cook_lib
 
     public class Cook_client
     {
-        public static void Init<T>(Dictionary<int, T> _dic) where T : IDishSDS
+        public static void Init<T, U>(Dictionary<int, T> _dishDic, Dictionary<int, U> _resultDic) where T : IDishSDS where U : IResultSDS
         {
-            CookMain.Init(_dic);
+            CookMain.Init(_dishDic, _resultDic);
         }
 
         private CookMain main = new CookMain();
@@ -71,16 +71,21 @@ namespace Cook_lib
 
         private void Update(BinaryReader _br)
         {
-            int tick = _br.ReadInt32();
+            ushort tick = _br.ReadUInt16();
 
             if (tick != main.tick)
             {
                 throw new Exception("tick is not match!  client:" + main.tick + "   server:" + tick);
             }
 
-            int randomSeed = _br.ReadInt32();
+            if (tick % CookConst.REQUIRE_PRODUCE_TIME == 0)
+            {
+                ushort randomSeed = _br.ReadUInt16();
 
-            int num = _br.ReadInt32();
+                main.SetSeed(randomSeed);
+            }
+
+            ushort num = _br.ReadUInt16();
 
             for (int i = 0; i < num; i++)
             {
@@ -130,7 +135,7 @@ namespace Cook_lib
                 }
             }
 
-            main.Update(randomSeed);
+            main.Update();
 
             client.UpdateCallBack();
         }
@@ -190,7 +195,7 @@ namespace Cook_lib
             return main.require;
         }
 
-        public int GetTick()
+        public ushort GetTick()
         {
             return main.tick;
         }

@@ -75,6 +75,7 @@
     <Compile Include="core\timeEvent\EventRequirementDisappear.cs" />
     <Compile Include="core\timeEvent\EventResultDisappear.cs" />
     <Compile Include="log\Log.cs" />
+    <Compile Include="sds\IResultSDS.cs" />
     <Compile Include="superRandom\SuperRandom.cs" />
     <Compile Include="packageTag\PackageTag.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
