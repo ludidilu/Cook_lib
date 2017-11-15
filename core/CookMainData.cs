@@ -132,6 +132,32 @@ namespace Cook_lib
                 }
             }
         }
+
+        internal string GetString()
+        {
+            string str = string.Empty;
+
+            for (int i = 0; i < dish.Count; i++)
+            {
+                str += dish[i].GetString();
+            }
+
+            string str2 = string.Empty;
+
+            for (int i = 0; i < workers.Length; i++)
+            {
+                str2 += workers[i].GetString();
+            }
+
+            string str3 = string.Empty;
+
+            for (int i = 0; i < result.Length; i++)
+            {
+                str3 += result[i] == null ? "null" : result[i].GetString();
+            }
+
+            return "{PlayerData  dish:" + str + "  workers:" + str2 + "  result:" + result + "}";
+        }
     }
 
     public class DishData
@@ -187,6 +213,11 @@ namespace Cook_lib
                 result = null;
             }
         }
+
+        internal string GetString()
+        {
+            return "{DishData  sds:" + sds.GetID() + "  state:" + state.ToString() + "  time:" + time + "  result:" + (result == null ? "null" : result.GetString()) + "}";
+        }
     }
 
     public class DishResult : DishResultBase
@@ -205,6 +236,11 @@ namespace Cook_lib
             base.FromBytes(_br);
 
             time = _br.ReadSingle();
+        }
+
+        internal override string GetString()
+        {
+            return "{DishResult  sds:" + sds.GetID() + "  isOptimized:" + isOptimized + "  time:" + time + "}";
         }
     }
 
@@ -227,6 +263,11 @@ namespace Cook_lib
             sds = CookMain.getResultData(id);
 
             isOptimized = _br.ReadBoolean();
+        }
+
+        internal virtual string GetString()
+        {
+            return "{DishResultBase  sds:" + sds.GetID() + "  isOptimized:" + isOptimized + "}";
         }
     }
 
@@ -269,6 +310,18 @@ namespace Cook_lib
 
             time = _br.ReadInt32();
         }
+
+        internal string GetString()
+        {
+            string str = string.Empty;
+
+            for (int i = 0; i < dishArr.Length; i++)
+            {
+                str += dishArr[i].GetString();
+            }
+
+            return "{DishRequirement  uid:" + uid + "  time:" + time + "  dishArr:" + str + "}";
+        }
     }
 
     public class Worker
@@ -288,6 +341,11 @@ namespace Cook_lib
             pos = _br.ReadInt32();
 
             punishTick = _br.ReadInt32();
+        }
+
+        internal string GetString()
+        {
+            return "{Worker  pos:" + pos + "  punishTick:" + punishTick + "}";
         }
     }
 }

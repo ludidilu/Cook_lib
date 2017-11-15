@@ -85,6 +85,10 @@ namespace Cook_lib
                 main.SetSeed(randomSeed);
             }
 
+            main.Update();
+
+            client.UpdateCallBack();
+
             ushort num = _br.ReadUInt16();
 
             for (int i = 0; i < num; i++)
@@ -135,9 +139,12 @@ namespace Cook_lib
                 }
             }
 
-            main.Update();
+            if (num > 0)
+            {
+                CookTest.client = main;
 
-            client.UpdateCallBack();
+                CookTest.Check();
+            }
         }
 
         public void ChangeResultPos(int _pos, int _targetPos)

@@ -17,6 +17,10 @@ namespace Cook_lib
 
         private Action<bool, bool, MemoryStream> serverSendDataCallBack;
 
+        private List<ushort> seedList = new List<ushort>();
+
+        private ushort tick;
+
         private List<ICommand> commandList = new List<ICommand>();
 
         public void ServerSetCallBack(Action<bool, bool, MemoryStream> _serverSendDataCallBack)
@@ -91,6 +95,11 @@ namespace Cook_lib
 
         private void ServerRefreshData(bool _isMine)
         {
+            if (tick > main.tick)
+            {
+                main.UpdateTo(tick, seedList);
+            }
+
             using (MemoryStream ms = new MemoryStream())
             {
                 using (BinaryWriter bw = new BinaryWriter(ms))
@@ -119,7 +128,11 @@ namespace Cook_lib
                         ushort randomSeed = (ushort)random.Next(ushort.MaxValue);
 
                         bw.Write(randomSeed);
+
+                        main.SetSeed(randomSeed);
                     }
+
+                    main.Update();
 
                     bw.Write((ushort)commandList.Count);
 
@@ -147,13 +160,86 @@ namespace Cook_lib
                         }
                     }
 
+                    if (commandList.Count > 0)
+                    {
+                        CookTest.server = main;
+
+                        CookTest.Check();
+                    }
+
                     commandList.Clear();
 
                     serverSendDataCallBack(true, true, ms);
 
                     serverSendDataCallBack(false, true, ms);
+                }
+            }
+        }
 
-                    main.Update();
+        public void ServerUpdateTo()
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (BinaryWriter bw = new BinaryWriter(ms))
+                {
+                    bw.Write(PackageTag.S2C_UPDATE);
+
+                    bw.Write(tick);
+
+                    if (tick % CookConst.REQUIRE_PRODUCE_TIME == 0)
+                    {
+                        ushort randomSeed = (ushort)random.Next(ushort.MaxValue);
+
+                        bw.Write(randomSeed);
+
+                        seedList.Add(randomSeed);
+                    }
+
+                    bw.Write((ushort)commandList.Count);
+
+                    tick++;
+
+                    if (commandList.Count > 0)
+                    {
+                        main.UpdateTo(tick, seedList);
+                    }
+
+                    for (int i = 0; i < commandList.Count; i++)
+                    {
+                        ICommand command = commandList[i];
+
+                        command.ToBytes(bw);
+
+                        if (command is CommandChangeWorkerPos)
+                        {
+                            main.GetCommandChangeWorkerPos((CommandChangeWorkerPos)command);
+                        }
+                        else if (command is CommandChangeResultPos)
+                        {
+                            main.GetCommandChangeResultPos((CommandChangeResultPos)command);
+                        }
+                        else if (command is CommandCompleteDish)
+                        {
+                            main.GetCommandCompleteDish((CommandCompleteDish)command);
+                        }
+                        else
+                        {
+                            main.GetCommandCompleteRequirement((CommandCompleteRequirement)command);
+                        }
+                    }
+
+                    if (commandList.Count > 0)
+                    {
+                        CookTest.server = main;
+
+                        CookTest.Check();
+                    }
+
+                    commandList.Clear();
+
+                    serverSendDataCallBack(true, true, ms);
+
+                    serverSendDataCallBack(false, true, ms);
                 }
             }
         }
