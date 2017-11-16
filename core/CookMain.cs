@@ -275,7 +275,7 @@ namespace Cook_lib
 
                 if (worker.punishTick > 0)
                 {
-                    worker.punishTick -= _tick;
+                    worker.punishTick -= (_tick - tick);
 
                     if (worker.punishTick < 0)
                     {
