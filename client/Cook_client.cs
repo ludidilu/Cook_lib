@@ -197,7 +197,7 @@ namespace Cook_lib
             return _isMine ? main.mData : main.oData;
         }
 
-        public Dictionary<int, DishRequirement> GetRequirement()
+        public List<DishRequirement> GetRequirement()
         {
             return main.require;
         }

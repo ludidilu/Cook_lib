@@ -28,7 +28,7 @@ namespace Cook_lib
 
         internal PlayerData oData = new PlayerData();
 
-        internal Dictionary<int, DishRequirement> require = new Dictionary<int, DishRequirement>();
+        internal List<DishRequirement> require = new List<DishRequirement>();
 
         private List<IResultSDS> dishAll = new List<IResultSDS>();
 
@@ -118,39 +118,22 @@ namespace Cook_lib
             {
                 DishRequirement requirement = GetRequire();
 
-                require.Add(requirement.uid, requirement);
+                require.Add(requirement);
 
                 eventCallBack?.Invoke(new EventRequirementAppear(requirement.uid));
             }
 
-            List<int> delList = null;
-
-            IEnumerator<DishRequirement> enumerator = require.Values.GetEnumerator();
-
-            while (enumerator.MoveNext())
+            for (int i = require.Count - 1; i > -1; i--)
             {
-                DishRequirement requirement = enumerator.Current;
+                DishRequirement requirement = require[i];
 
                 requirement.time++;
 
                 if (requirement.time > CookConst.REQUIRE_EXCEED_TIME * CookConst.TICK_NUM_PER_SECOND)
                 {
-                    if (delList == null)
-                    {
-                        delList = new List<int>();
-                    }
-
-                    delList.Add(requirement.uid);
+                    require.RemoveAt(i);
 
                     eventCallBack?.Invoke(new EventRequirementDisappear(requirement.uid));
-                }
-            }
-
-            if (delList != null)
-            {
-                for (int i = 0; i < delList.Count; i++)
-                {
-                    require.Remove(delList[i]);
                 }
             }
         }
@@ -167,35 +150,20 @@ namespace Cook_lib
 
                 requirement.time = tick - i * CookConst.REQUIRE_PRODUCE_TIME;
 
-                require.Add(requirement.uid, requirement);
+                require.Add(requirement);
             }
 
-            List<int> delList = null;
-
-            IEnumerator<DishRequirement> enumerator = require.Values.GetEnumerator();
-
-            while (enumerator.MoveNext())
+            for (int i = require.Count - 1; i > -1; i--)
             {
-                DishRequirement requirement = enumerator.Current;
+                DishRequirement requirement = require[i];
 
                 requirement.time += _tick - tick;
 
                 if (requirement.time > CookConst.REQUIRE_EXCEED_TIME * CookConst.TICK_NUM_PER_SECOND)
                 {
-                    if (delList == null)
-                    {
-                        delList = new List<int>();
-                    }
+                    require.RemoveAt(i);
 
-                    delList.Add(requirement.uid);
-                }
-            }
-
-            if (delList != null)
-            {
-                for (int i = 0; i < delList.Count; i++)
-                {
-                    require.Remove(delList[i]);
+                    eventCallBack?.Invoke(new EventRequirementDisappear(requirement.uid));
                 }
             }
         }
@@ -638,7 +606,7 @@ namespace Cook_lib
 
                         if (_data.time > _data.sds.GetPrepareTime() * CookConst.TICK_NUM_PER_SECOND)
                         {
-                            _tick = (int)(_data.time - _data.sds.GetPrepareTime() * CookConst.TICK_NUM_PER_SECOND);
+                            _tick = (int)(_data.time - GetTimeFix(_data.sds.GetPrepareTime() * CookConst.TICK_NUM_PER_SECOND));
 
                             _data.time = 0;
 
@@ -668,7 +636,7 @@ namespace Cook_lib
 
                         if (_data.time > _data.sds.GetCookTime() * CookConst.TICK_NUM_PER_SECOND)
                         {
-                            _tick = (int)(_data.time - _data.sds.GetCookTime() * CookConst.TICK_NUM_PER_SECOND);
+                            _tick = (int)(_data.time - GetTimeFix(_data.sds.GetCookTime() * CookConst.TICK_NUM_PER_SECOND));
 
                             _data.time = 0;
 
@@ -691,7 +659,7 @@ namespace Cook_lib
 
                         if (_data.time > _data.sds.GetOptimizeTime() * CookConst.TICK_NUM_PER_SECOND)
                         {
-                            _tick = (int)(_data.time - _data.sds.GetOptimizeTime() * CookConst.TICK_NUM_PER_SECOND);
+                            _tick = (int)(_data.time - GetTimeFix(_data.sds.GetOptimizeTime() * CookConst.TICK_NUM_PER_SECOND));
 
                             _data.time = 0;
 
@@ -718,7 +686,7 @@ namespace Cook_lib
 
                             if (_data.result.time > _data.result.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
                             {
-                                _tick = (int)((_data.result.time - _data.result.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND) / CookConst.EXCEED_VALUE_3);
+                                _tick = (int)((_data.result.time - GetTimeFix(_data.result.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)) / CookConst.EXCEED_VALUE_3);
 
                                 _data.time = 0;
 
@@ -764,7 +732,7 @@ namespace Cook_lib
 
                         if (_data.time > _data.sds.GetCookTime() * CookConst.TICK_NUM_PER_SECOND)
                         {
-                            _tick = (int)(_data.time - _data.sds.GetCookTime() * CookConst.TICK_NUM_PER_SECOND);
+                            _tick = (int)(_data.time - GetTimeFix(_data.sds.GetCookTime() * CookConst.TICK_NUM_PER_SECOND));
 
                             _data.time = 0;
 
@@ -829,6 +797,11 @@ namespace Cook_lib
                         break;
                 }
             }
+        }
+
+        private int GetTimeFix(float _time)
+        {
+            return (int)(_time) + 1;
         }
 
         private int requirementUid = 0;
@@ -1008,39 +981,44 @@ namespace Cook_lib
 
         internal void GetCommandCompleteRequirement(CommandCompleteRequirement _command)
         {
-            DishRequirement requirement;
-
-            if (require.TryGetValue(_command.requirementUid, out requirement))
+            for (int i = 0; i < require.Count; i++)
             {
-                PlayerData playerData = _command.isMine ? mData : oData;
+                DishRequirement requirement = require[i];
 
-                if (CheckCanCompleteRequirement(_command.resultList, playerData, requirement))
+                if (requirement.uid == _command.requirementUid)
                 {
-                    AddReward(_command.isMine, requirement);
+                    PlayerData playerData = _command.isMine ? mData : oData;
 
-                    require.Remove(requirement.uid);
-
-                    for (int m = 0; m < _command.resultList.Count; m++)
+                    if (CheckCanCompleteRequirement(_command.resultList, playerData, requirement))
                     {
-                        int index = _command.resultList[m];
+                        AddReward(_command.isMine, requirement);
 
-                        if (index > -1)
+                        require.RemoveAt(i);
+
+                        for (int m = 0; m < _command.resultList.Count; m++)
                         {
-                            playerData.result[index] = null;
+                            int index = _command.resultList[m];
+
+                            if (index > -1)
+                            {
+                                playerData.result[index] = null;
+                            }
+                            else
+                            {
+                                DishData dish = playerData.dish[-index - 1];
+
+                                dish.result = null;
+
+                                dish.state = DishState.NULL;
+
+                                dish.time = 0;
+                            }
                         }
-                        else
-                        {
-                            DishData dish = playerData.dish[-index - 1];
 
-                            dish.result = null;
-
-                            dish.state = DishState.NULL;
-
-                            dish.time = 0;
-                        }
+                        eventCallBack?.Invoke(_command);
                     }
 
-                    eventCallBack?.Invoke(_command);
+                    break;
                 }
             }
         }
@@ -1202,11 +1180,9 @@ namespace Cook_lib
 
             _bw.Write(require.Count);
 
-            IEnumerator<DishRequirement> enumerator = require.Values.GetEnumerator();
-
-            while (enumerator.MoveNext())
+            for (int i = 0; i < require.Count; i++)
             {
-                enumerator.Current.ToBytes(_bw);
+                require[i].ToBytes(_bw);
             }
         }
 
@@ -1228,7 +1204,7 @@ namespace Cook_lib
 
                 requirement.FromBytes(_br);
 
-                require.Add(requirement.uid, requirement);
+                require.Add(requirement);
             }
 
             InitDishAll(mData);
@@ -1240,11 +1216,9 @@ namespace Cook_lib
         {
             string str = string.Empty;
 
-            IEnumerator<DishRequirement> e = require.Values.GetEnumerator();
-
-            while (e.MoveNext())
+            for (int i = 0; i < require.Count; i++)
             {
-                str += e.Current.GetString();
+                str += require[i].GetString();
             }
 
             return "{CookMain  tick:" + tick + "  mData:" + mData.GetString() + "  oData:" + oData.GetString() + "  require:" + str + "}";
