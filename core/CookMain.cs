@@ -998,7 +998,7 @@ namespace Cook_lib
 
                     if (CheckCanCompleteRequirement(_command.resultList, playerData, requirement))
                     {
-                        AddReward(_command.isMine, requirement);
+                        AddReward(_command.resultList, playerData, requirement);
 
                         require.RemoveAt(i);
 
@@ -1030,9 +1030,46 @@ namespace Cook_lib
             }
         }
 
-        private void AddReward(bool _isMine, DishRequirement _requirement)
+        private void AddReward(List<int> _resultList, PlayerData _playerData, DishRequirement _requirement)
         {
+            int num = 0;
 
+            for (int i = 0; i < _requirement.dishArr.Length; i++)
+            {
+                DishResultBase result = _requirement.dishArr[i];
+
+                num += result.isOptimized ? result.sds.GetMoneyOptimized() : result.sds.GetMoney();
+            }
+
+            bool allOptimized = true;
+
+            for (int i = 0; i < _resultList.Count; i++)
+            {
+                int index = _resultList[i];
+
+                DishResult result;
+
+                if (index > -1 && index < _playerData.result.Length)
+                {
+                    result = _playerData.result[index];
+                }
+                else
+                {
+                    result = _playerData.dish[-index - 1].result;
+                }
+
+                if (!result.isOptimized)
+                {
+                    allOptimized = false;
+                }
+            }
+
+            if (allOptimized)
+            {
+                num *= 2;
+            }
+
+            _playerData.money += num;
         }
 
         public bool CheckCanCompleteRequirement(List<int> _resultList, PlayerData _playerData, DishRequirement _requirement)

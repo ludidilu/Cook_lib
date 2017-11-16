@@ -19,6 +19,8 @@ namespace Cook_lib
 
         public DishResult[] result = new DishResult[CookConst.RESULT_STATE.Length];
 
+        public int money;
+
         internal PlayerData()
         {
             for (int i = 0; i < CookConst.WORKER_NUM; i++)
@@ -43,6 +45,8 @@ namespace Cook_lib
 
         internal void Clear()
         {
+            money = 0;
+
             dish.Clear();
 
             for (int i = 0; i < CookConst.RESULT_STATE.Length; i++)
@@ -62,6 +66,8 @@ namespace Cook_lib
 
         internal void ToBytes(BinaryWriter _bw)
         {
+            _bw.Write(money);
+
             _bw.Write(dish.Count);
 
             for (int i = 0; i < dish.Count; i++)
@@ -93,6 +99,8 @@ namespace Cook_lib
 
         internal void FromBytes(BinaryReader _br)
         {
+            money = _br.ReadInt32();
+
             int num = _br.ReadInt32();
 
             for (int i = 0; i < num; i++)
