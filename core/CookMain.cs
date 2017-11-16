@@ -32,6 +32,8 @@ namespace Cook_lib
 
         private List<IResultSDS> dishAll = new List<IResultSDS>();
 
+        private int maxRequirementNum;
+
         internal ushort tick { private set; get; }
 
         private SuperRandom random = new SuperRandom();
@@ -51,9 +53,36 @@ namespace Cook_lib
 
             oData.SetDishData(_oDish);
 
+            InitDishAll();
+        }
+
+        private void InitDishAll()
+        {
             InitDishAll(mData);
 
             InitDishAll(oData);
+
+            maxRequirementNum = dishAll.Count;
+
+            for (int i = 0; i < dishAll.Count; i++)
+            {
+                IResultSDS sds = dishAll[i];
+
+                if (sds.GetMaxNum() > 1)
+                {
+                    maxRequirementNum += sds.GetMaxNum() - 1;
+                }
+            }
+
+            if (maxRequirementNum > CookConst.REQUIRE_NUM_MAX)
+            {
+                maxRequirementNum = CookConst.REQUIRE_NUM_MAX;
+            }
+
+            if (maxRequirementNum < CookConst.REQUIRE_NUM_MIN)
+            {
+                throw new Exception("GetRequire error!");
+            }
         }
 
         private void InitDishAll(PlayerData _playerData)
@@ -176,29 +205,7 @@ namespace Cook_lib
 
             List<IResultSDS> list = new List<IResultSDS>(dishAll);
 
-            int maxNum = list.Count;
-
-            for (int i = 0; i < list.Count; i++)
-            {
-                IResultSDS sds = list[i];
-
-                if (sds.GetMaxNum() > 1)
-                {
-                    maxNum += sds.GetMaxNum() - 1;
-                }
-            }
-
-            if (maxNum > CookConst.REQUIRE_NUM_MAX)
-            {
-                maxNum = CookConst.REQUIRE_NUM_MAX;
-            }
-
-            if (maxNum < CookConst.REQUIRE_NUM_MIN)
-            {
-                throw new Exception("GetRequire error!");
-            }
-
-            int num = random.Get(CookConst.REQUIRE_NUM_MIN, maxNum + 1);
+            int num = random.Get(CookConst.REQUIRE_NUM_MIN, maxRequirementNum + 1);
 
             DishResultBase[] resultArr = new DishResultBase[num];
 
@@ -1207,9 +1214,7 @@ namespace Cook_lib
                 require.Add(requirement);
             }
 
-            InitDishAll(mData);
-
-            InitDishAll(oData);
+            InitDishAll();
         }
 
         internal string GetString()
