@@ -176,7 +176,7 @@ namespace Cook_lib
                 str3 += result[i] == null ? "null" : result[i].GetString();
             }
 
-            return "{PlayerData  dish:" + str + "  workers:" + str2 + "  result:" + result + "}";
+            return "{PlayerData  money:" + money + "  dish:" + str + "  workers:" + str2 + "  result:" + result + "}";
         }
     }
 

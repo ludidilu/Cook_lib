@@ -259,6 +259,8 @@ namespace Cook_lib
                     if (tick > CookConst.MAX_TIME * CookConst.TICK_NUM_PER_SECOND)
                     {
                         gameResult = main.GetGameResult();
+
+                        seedList.Clear();
                     }
                     else
                     {

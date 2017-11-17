@@ -87,7 +87,6 @@ namespace Cook_lib
 
             main.Update();
 
-
             ushort num = _br.ReadUInt16();
 
             for (int i = 0; i < num; i++)
