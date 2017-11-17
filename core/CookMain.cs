@@ -47,8 +47,6 @@ namespace Cook_lib
 
         public void Start(IList<int> _mDish, IList<int> _oDish)
         {
-            Reset();
-
             mData.SetDishData(_mDish);
 
             oData.SetDishData(_oDish);

@@ -33,7 +33,11 @@ namespace Cook_lib
         {
             for (int i = 0; i < CookConst.WORKER_NUM; i++)
             {
-                workers[i] = new Worker();
+                Worker worker = new Worker();
+
+                worker.pos = -1 - i;
+
+                workers[i] = worker;
             }
         }
 
