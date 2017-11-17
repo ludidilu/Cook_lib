@@ -69,12 +69,6 @@
     <Compile Include="core\CookMain.cs" />
     <Compile Include="core\CookMainData.cs" />
     <Compile Include="core\CookTest.cs" />
-    <Compile Include="core\timeEvent\EventDishResultAppear.cs" />
-    <Compile Include="core\timeEvent\EventDishResultBeOptimized.cs" />
-    <Compile Include="core\timeEvent\EventDishResultDisappear.cs" />
-    <Compile Include="core\timeEvent\EventRequirementAppear.cs" />
-    <Compile Include="core\timeEvent\EventRequirementDisappear.cs" />
-    <Compile Include="core\timeEvent\EventResultDisappear.cs" />
     <Compile Include="log\Log.cs" />
     <Compile Include="sds\IResultSDS.cs" />
     <Compile Include="superRandom\SuperRandom.cs" />

@@ -141,6 +141,28 @@ namespace Cook_lib
             tick = _tick;
         }
 
+        internal GameResult GetGameResult()
+        {
+            GameResult gameResult;
+
+            if (mData.money > oData.money)
+            {
+                gameResult = GameResult.M_WIN;
+            }
+            else if (mData.money < oData.money)
+            {
+                gameResult = GameResult.O_WIN;
+            }
+            else
+            {
+                gameResult = GameResult.DRAW;
+            }
+
+            Reset();
+
+            return gameResult;
+        }
+
         private void RefreshRequire()
         {
             if (tick % CookConst.REQUIRE_PRODUCE_TIME == 0)
@@ -148,8 +170,6 @@ namespace Cook_lib
                 DishRequirement requirement = GetRequire();
 
                 require.Add(requirement);
-
-                eventCallBack?.Invoke(new EventRequirementAppear(requirement.uid));
             }
 
             for (int i = require.Count - 1; i > -1; i--)
@@ -161,8 +181,6 @@ namespace Cook_lib
                 if (requirement.time > CookConst.REQUIRE_EXCEED_TIME * CookConst.TICK_NUM_PER_SECOND)
                 {
                     require.RemoveAt(i);
-
-                    eventCallBack?.Invoke(new EventRequirementDisappear(requirement.uid));
                 }
             }
         }
@@ -191,8 +209,6 @@ namespace Cook_lib
                 if (requirement.time > CookConst.REQUIRE_EXCEED_TIME * CookConst.TICK_NUM_PER_SECOND)
                 {
                     require.RemoveAt(i);
-
-                    eventCallBack?.Invoke(new EventRequirementDisappear(requirement.uid));
                 }
             }
         }
@@ -307,8 +323,6 @@ namespace Cook_lib
                     if (result.time > result.sds.GetExceedTime() * CookConst.TICK_NUM_PER_SECOND)
                     {
                         results[i] = null;
-
-                        eventCallBack?.Invoke(new EventResultDisappear(_isMine, i));
                     }
                 }
             }
@@ -394,8 +408,6 @@ namespace Cook_lib
                                     data.result = new DishResult();
 
                                     data.result.sds = data.sds.GetResult();
-
-                                    eventCallBack?.Invoke(new EventDishResultAppear(_isMine, i));
                                 }
                             }
 
@@ -414,8 +426,6 @@ namespace Cook_lib
                                 data.result = new DishResult();
 
                                 data.result.sds = data.sds.GetResult();
-
-                                eventCallBack?.Invoke(new EventDishResultAppear(_isMine, i));
                             }
 
                             break;
@@ -431,8 +441,6 @@ namespace Cook_lib
                                 data.state = DishState.NULL;
 
                                 data.result.isOptimized = true;
-
-                                eventCallBack?.Invoke(new EventDishResultBeOptimized(_isMine, i));
                             }
 
                             break;
@@ -456,8 +464,6 @@ namespace Cook_lib
                                     data.result = null;
 
                                     data.state = DishState.NULL;
-
-                                    eventCallBack?.Invoke(new EventDishResultDisappear(_isMine, i));
                                 }
                             }
 
@@ -494,8 +500,6 @@ namespace Cook_lib
                                 data.result = new DishResult();
 
                                 data.result.sds = data.sds.GetResult();
-
-                                eventCallBack?.Invoke(new EventDishResultAppear(_isMine, i));
                             }
 
                             break;
@@ -518,8 +522,6 @@ namespace Cook_lib
                                 data.result = null;
 
                                 data.state = DishState.NULL;
-
-                                eventCallBack?.Invoke(new EventDishResultDisappear(_isMine, i));
                             }
 
                             break;
@@ -537,8 +539,6 @@ namespace Cook_lib
                                     data.result = null;
 
                                     data.state = DishState.NULL;
-
-                                    eventCallBack?.Invoke(new EventDishResultDisappear(_isMine, i));
                                 }
                             }
 
@@ -1034,17 +1034,14 @@ namespace Cook_lib
         {
             int num = 0;
 
-            for (int i = 0; i < _requirement.dishArr.Length; i++)
-            {
-                DishResultBase result = _requirement.dishArr[i];
-
-                num += result.isOptimized ? result.sds.GetMoneyOptimized() : result.sds.GetMoney();
-            }
-
             bool allOptimized = true;
 
-            for (int i = 0; i < _resultList.Count; i++)
+            for (int i = 0; i < _requirement.dishArr.Length; i++)
             {
+                DishResultBase resultBase = _requirement.dishArr[i];
+
+                num += resultBase.isOptimized ? resultBase.sds.GetMoneyOptimized() : resultBase.sds.GetMoney();
+
                 int index = _resultList[i];
 
                 DishResult result;
@@ -1064,9 +1061,15 @@ namespace Cook_lib
                 }
             }
 
+            float fix = 1 + (_requirement.dishArr.Length - CookConst.REQUIRE_NUM_MIN) * (CookConst.REQUIRE_REWARD_FIX - 1) / (CookConst.REQUIRE_NUM_MAX - CookConst.REQUIRE_NUM_MIN);
+
             if (allOptimized)
             {
-                num *= 2;
+                num = (int)(num * fix * CookConst.REQUIRE_REWARD_ALL_OPTIMIZED_FIX);
+            }
+            else
+            {
+                num = (int)(num * fix);
             }
 
             _playerData.money += num;

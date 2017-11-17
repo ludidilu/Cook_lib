@@ -25,5 +25,11 @@
         public const float EXCEED_VALUE_2 = 0.5f;
 
         public const float EXCEED_VALUE_3 = 1.0f;
+
+        public const float MAX_TIME = 180;
+
+        public const float REQUIRE_REWARD_FIX = 1.5f;
+
+        public const float REQUIRE_REWARD_ALL_OPTIMIZED_FIX = 1.5f;
     }
 }

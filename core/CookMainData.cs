@@ -3,6 +3,13 @@ using System.Collections.Generic;
 
 namespace Cook_lib
 {
+    public enum GameResult
+    {
+        M_WIN,
+        O_WIN,
+        DRAW
+    }
+
     public enum DishState
     {
         NULL,

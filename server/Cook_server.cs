@@ -17,15 +17,19 @@ namespace Cook_lib
 
         private Action<bool, bool, MemoryStream> serverSendDataCallBack;
 
+        private Action<GameResult> battleOverCallBack;
+
         private List<ushort> seedList = new List<ushort>();
 
         private ushort tick;
 
         private List<ICommand> commandList = new List<ICommand>();
 
-        public void ServerSetCallBack(Action<bool, bool, MemoryStream> _serverSendDataCallBack)
+        public void ServerSetCallBack(Action<bool, bool, MemoryStream> _serverSendDataCallBack, Action<GameResult> _battleOverCallBack)
         {
             serverSendDataCallBack = _serverSendDataCallBack;
+
+            battleOverCallBack = _battleOverCallBack;
         }
 
         public void ServerStart(IList<int> _mDish, IList<int> _oDish)
@@ -172,6 +176,13 @@ namespace Cook_lib
                     serverSendDataCallBack(true, true, ms);
 
                     serverSendDataCallBack(false, true, ms);
+
+                    if (tick > CookConst.MAX_TIME * CookConst.TICK_NUM_PER_SECOND)
+                    {
+                        GameResult gameResult = main.GetGameResult();
+
+                        battleOverCallBack(gameResult);
+                    }
                 }
             }
         }
@@ -199,7 +210,7 @@ namespace Cook_lib
 
                     tick++;
 
-                    if (commandList.Count > 0)
+                    if (commandList.Count > 0 || tick > CookConst.MAX_TIME * CookConst.TICK_NUM_PER_SECOND)
                     {
                         main.UpdateTo(tick, seedList);
                     }
@@ -240,6 +251,13 @@ namespace Cook_lib
                     serverSendDataCallBack(true, true, ms);
 
                     serverSendDataCallBack(false, true, ms);
+
+                    if (tick > CookConst.MAX_TIME * CookConst.TICK_NUM_PER_SECOND)
+                    {
+                        GameResult gameResult = main.GetGameResult();
+
+                        battleOverCallBack(gameResult);
+                    }
                 }
             }
         }

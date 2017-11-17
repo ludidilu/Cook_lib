@@ -11,6 +11,7 @@ namespace Cook_lib
         void RefreshData();
         void UpdateCallBack();
         void TriggerEvent(ValueType _event);
+        void BattleOver(GameResult _gameResult);
     }
 
     public class Cook_client
@@ -144,6 +145,13 @@ namespace Cook_lib
                 CookTest.client = main;
 
                 CookTest.Check();
+            }
+
+            if (main.tick > CookConst.MAX_TIME * CookConst.TICK_NUM_PER_SECOND)
+            {
+                GameResult gameResult = main.GetGameResult();
+
+                client.BattleOver(gameResult);
             }
         }
 
