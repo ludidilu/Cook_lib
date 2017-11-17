@@ -68,7 +68,6 @@
     <Compile Include="core\CookConst.cs" />
     <Compile Include="core\CookMain.cs" />
     <Compile Include="core\CookMainData.cs" />
-    <Compile Include="core\CookTest.cs" />
     <Compile Include="log\Log.cs" />
     <Compile Include="sds\IResultSDS.cs" />
     <Compile Include="superRandom\SuperRandom.cs" />

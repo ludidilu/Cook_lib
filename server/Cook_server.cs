@@ -23,6 +23,8 @@ namespace Cook_lib
 
         private List<ICommand> commandList = new List<ICommand>();
 
+        private Dictionary<ushort, byte[]> checkSyncDic = new Dictionary<ushort, byte[]>();
+
         public void ServerSetCallBack(Action<bool, bool, MemoryStream> _serverSendDataCallBack)
         {
             serverSendDataCallBack = _serverSendDataCallBack;
@@ -48,6 +50,12 @@ namespace Cook_lib
                 case PackageTag.C2S_REFRESH:
 
                     ServerRefreshData(_isMine);
+
+                    break;
+
+                case PackageTag.C2S_CHECK_SYNC:
+
+                    ReceiveCheckSync(_isMine, _br);
 
                     break;
             }
@@ -162,9 +170,7 @@ namespace Cook_lib
 
                     if (commandList.Count > 0)
                     {
-                        CookTest.server = main;
 
-                        CookTest.Check();
                     }
 
                     commandList.Clear();
@@ -243,9 +249,15 @@ namespace Cook_lib
 
                     if (commandList.Count > 0)
                     {
-                        CookTest.server = main;
+                        using (MemoryStream ms2 = new MemoryStream())
+                        {
+                            using (BinaryWriter bw2 = new BinaryWriter(ms2))
+                            {
+                                main.ToBytes(bw2);
 
-                        CookTest.Check();
+                                checkSyncDic.Add(tick, ms2.ToArray());
+                            }
+                        }
                     }
 
                     commandList.Clear();
@@ -268,6 +280,60 @@ namespace Cook_lib
                     }
 
                     return gameResult;
+                }
+            }
+        }
+
+        private void ReceiveCheckSync(bool _isMine, BinaryReader _br)
+        {
+            ushort nowTick = _br.ReadUInt16();
+
+            int num = _br.ReadInt32();
+
+            byte[] clientBytes = _br.ReadBytes(num);
+
+            byte[] serverBytes = checkSyncDic[nowTick];
+
+            CheckSync(_isMine, nowTick, clientBytes, serverBytes);
+        }
+
+        private void CheckSync(bool _isMine, ushort _tick, byte[] _clientBytes, byte[] _serverBytes)
+        {
+            if (_clientBytes.Length != _serverBytes.Length)
+            {
+                File.WriteAllText("d:/server.txt", Debug(_serverBytes));
+
+                File.WriteAllText("d:/client.txt", Debug(_clientBytes));
+
+                throw new Exception("CheckSync error0");
+            }
+
+            for (int i = 0; i < _clientBytes.Length; i++)
+            {
+                if (_clientBytes[i] != _serverBytes[i])
+                {
+                    File.WriteAllText("d:/server.txt", Debug(_serverBytes));
+
+                    File.WriteAllText("d:/client.txt", Debug(_clientBytes));
+
+                    throw new Exception("CheckSync error1");
+                }
+            }
+
+            Log.Write("CheckSync success:" + _isMine + "   " + _tick);
+        }
+
+        private String Debug(byte[] _bytes)
+        {
+            using (MemoryStream ms = new MemoryStream(_bytes))
+            {
+                using (BinaryReader br = new BinaryReader(ms))
+                {
+                    CookMain cm = new CookMain();
+
+                    cm.FromBytes(br);
+
+                    return cm.GetString();
                 }
             }
         }

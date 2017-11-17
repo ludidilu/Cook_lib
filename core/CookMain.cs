@@ -45,7 +45,7 @@ namespace Cook_lib
             eventCallBack = _eventCallBack;
         }
 
-        public void Start(IList<int> _mDish, IList<int> _oDish)
+        internal void Start(IList<int> _mDish, IList<int> _oDish)
         {
             mData.SetDishData(_mDish);
 
@@ -822,6 +822,8 @@ namespace Cook_lib
         {
             tick = 0;
 
+            requirementUid = 0;
+
             mData.Clear();
             oData.Clear();
 
@@ -994,7 +996,7 @@ namespace Cook_lib
                 {
                     PlayerData playerData = _command.isMine ? mData : oData;
 
-                    if (CheckCanCompleteRequirement(_command.resultList, playerData, requirement))
+                    if (CheckCanCompleteRequirement(_command.resultList, playerData, requirement, true))
                     {
                         AddReward(_command.resultList, playerData, requirement);
 
@@ -1073,10 +1075,15 @@ namespace Cook_lib
             _playerData.money += num;
         }
 
-        public bool CheckCanCompleteRequirement(List<int> _resultList, PlayerData _playerData, DishRequirement _requirement)
+        internal bool CheckCanCompleteRequirement(List<int> _resultList, PlayerData _playerData, DishRequirement _requirement, bool _throwException)
         {
             if (_resultList.Count != _requirement.dishArr.Length)
             {
+                if (_throwException)
+                {
+                    throw new Exception("CheckCanCompleteRequirement  false0");
+                }
+
                 return false;
             }
 
@@ -1096,6 +1103,11 @@ namespace Cook_lib
                     }
                     else
                     {
+                        if (_throwException)
+                        {
+                            throw new Exception("CheckCanCompleteRequirement  false1");
+                        }
+
                         return false;
                     }
                 }
@@ -1109,11 +1121,21 @@ namespace Cook_lib
                     }
                     else
                     {
+                        if (_throwException)
+                        {
+                            throw new Exception("CheckCanCompleteRequirement  false2");
+                        }
+
                         return false;
                     }
                 }
                 else
                 {
+                    if (_throwException)
+                    {
+                        throw new Exception("CheckCanCompleteRequirement  false3");
+                    }
+
                     return false;
                 }
             }
@@ -1191,8 +1213,15 @@ namespace Cook_lib
             {
                 return true;
             }
+            else
+            {
+                if (_throwException)
+                {
+                    throw new Exception("CheckCanCompleteRequirement  false4");
+                }
 
-            return false;
+                return false;
+            }
         }
 
 
@@ -1219,6 +1248,8 @@ namespace Cook_lib
         {
             _bw.Write(tick);
 
+            _bw.Write(requirementUid);
+
             mData.ToBytes(_bw);
 
             oData.ToBytes(_bw);
@@ -1236,6 +1267,8 @@ namespace Cook_lib
             Reset();
 
             tick = _br.ReadUInt16();
+
+            requirementUid = _br.ReadInt32();
 
             mData.FromBytes(_br);
 

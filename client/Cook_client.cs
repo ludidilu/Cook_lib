@@ -139,9 +139,7 @@ namespace Cook_lib
 
             if (num > 0)
             {
-                CookTest.client = main;
-
-                CookTest.Check();
+                CheckSync();
             }
 
             GameResult gameResult;
@@ -201,7 +199,32 @@ namespace Cook_lib
             }
         }
 
+        private void CheckSync()
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (BinaryWriter bw = new BinaryWriter(ms))
+                {
+                    bw.Write(PackageTag.C2S_CHECK_SYNC);
 
+                    bw.Write(main.tick);
+
+                    int startPos = (int)ms.Position;
+
+                    bw.Write(0);
+
+                    main.ToBytes(bw);
+
+                    int endPos = (int)ms.Position;
+
+                    ms.Position = startPos;
+
+                    bw.Write(endPos - startPos - 4);
+
+                    client.SendData(ms);
+                }
+            }
+        }
 
         public PlayerData GetPlayerData(bool _isMine)
         {
@@ -222,7 +245,7 @@ namespace Cook_lib
         {
             PlayerData playerData = clientIsMine ? main.mData : main.oData;
 
-            return main.CheckCanCompleteRequirement(_resultList, playerData, _requirement);
+            return main.CheckCanCompleteRequirement(_resultList, playerData, _requirement, false);
         }
     }
 }
