@@ -17,19 +17,15 @@ namespace Cook_lib
 
         private Action<bool, bool, MemoryStream> serverSendDataCallBack;
 
-        private Action<GameResult> battleOverCallBack;
-
         private List<ushort> seedList = new List<ushort>();
 
         private ushort tick;
 
         private List<ICommand> commandList = new List<ICommand>();
 
-        public void ServerSetCallBack(Action<bool, bool, MemoryStream> _serverSendDataCallBack, Action<GameResult> _battleOverCallBack)
+        public void ServerSetCallBack(Action<bool, bool, MemoryStream> _serverSendDataCallBack)
         {
             serverSendDataCallBack = _serverSendDataCallBack;
-
-            battleOverCallBack = _battleOverCallBack;
         }
 
         public void ServerStart(IList<int> _mDish, IList<int> _oDish)
@@ -117,7 +113,7 @@ namespace Cook_lib
             }
         }
 
-        public void ServerUpdate()
+        public GameResult ServerUpdate()
         {
             using (MemoryStream ms = new MemoryStream())
             {
@@ -177,17 +173,23 @@ namespace Cook_lib
 
                     serverSendDataCallBack(false, true, ms);
 
+                    GameResult gameResult;
+
                     if (tick > CookConst.MAX_TIME * CookConst.TICK_NUM_PER_SECOND)
                     {
-                        GameResult gameResult = main.GetGameResult();
-
-                        battleOverCallBack(gameResult);
+                        gameResult = main.GetGameResult();
                     }
+                    else
+                    {
+                        gameResult = GameResult.NOT_OVER;
+                    }
+
+                    return gameResult;
                 }
             }
         }
 
-        public void ServerUpdateTo()
+        public GameResult ServerUpdateTo()
         {
             using (MemoryStream ms = new MemoryStream())
             {
@@ -252,12 +254,18 @@ namespace Cook_lib
 
                     serverSendDataCallBack(false, true, ms);
 
+                    GameResult gameResult;
+
                     if (tick > CookConst.MAX_TIME * CookConst.TICK_NUM_PER_SECOND)
                     {
-                        GameResult gameResult = main.GetGameResult();
-
-                        battleOverCallBack(gameResult);
+                        gameResult = main.GetGameResult();
                     }
+                    else
+                    {
+                        gameResult = GameResult.NOT_OVER;
+                    }
+
+                    return gameResult;
                 }
             }
         }

@@ -9,9 +9,8 @@ namespace Cook_lib
         void SendData(MemoryStream _ms);
         void SendData(MemoryStream _ms, Action<BinaryReader> _callBack);
         void RefreshData();
-        void UpdateCallBack();
+        void UpdateCallBack(GameResult _gameResult);
         void TriggerEvent(ValueType _event);
-        void BattleOver(GameResult _gameResult);
     }
 
     public class Cook_client
@@ -88,7 +87,6 @@ namespace Cook_lib
 
             main.Update();
 
-            client.UpdateCallBack();
 
             ushort num = _br.ReadUInt16();
 
@@ -147,12 +145,18 @@ namespace Cook_lib
                 CookTest.Check();
             }
 
+            GameResult gameResult;
+
             if (main.tick > CookConst.MAX_TIME * CookConst.TICK_NUM_PER_SECOND)
             {
-                GameResult gameResult = main.GetGameResult();
-
-                client.BattleOver(gameResult);
+                gameResult = main.GetGameResult();
             }
+            else
+            {
+                gameResult = GameResult.NOT_OVER;
+            }
+
+            client.UpdateCallBack(gameResult);
         }
 
         public void ChangeResultPos(int _pos, int _targetPos)

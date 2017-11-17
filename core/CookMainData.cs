@@ -5,6 +5,7 @@ namespace Cook_lib
 {
     public enum GameResult
     {
+        NOT_OVER,
         M_WIN,
         O_WIN,
         DRAW
