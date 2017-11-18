@@ -272,7 +272,7 @@ namespace Cook_lib
                     {
                         gameResult = main.GetGameResult();
 
-                        seedList.Clear();
+                        Clear();
                     }
                     else
                     {
@@ -282,6 +282,13 @@ namespace Cook_lib
                     return gameResult;
                 }
             }
+        }
+
+        private void Clear()
+        {
+            tick = 0;
+
+            seedList.Clear();
         }
 
         private void ReceiveCheckSync(bool _isMine, BinaryReader _br)
